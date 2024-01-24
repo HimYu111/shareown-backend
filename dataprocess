@@ -1,0 +1,42 @@
+import pandas as pd
+
+df = pd.read_excel('transactions.xlsx', sheet_name='Sheet1', usecols='B:D')
+df.columns = ['Transaction_Value', 'Date', 'Postcode']
+df['Postcode_Area'] = df['Postcode'].apply(lambda x: x.strip()[:3])
+
+df['Date'] = pd.to_datetime(df['Date'])
+
+df['Quarter'] = df['Date'].dt.to_period('Q')
+grouped_df = df.groupby(['Postdate_Area', 'Quarter'])
+
+average_transaction_values = grouped_df['Transaction_Value'].mean().reset_index()
+
+def query_average_transaction_value(postcode_area, year, quarter):
+    quarter_period = pd.Period(f"{year}Q{quarter}")
+    
+    result = average_transaction_values[
+        (average_transaction_values['Postcode_Area'] == postcode_area) & 
+        (average_transaction_values['Quarter'] == quarter_period)
+    ]
+    
+    if not result.empty:
+        average_value = result['Transaction_Value'].iloc[0]
+        print(f"The average transaction value for area {postcode_area} in Q{quarter} {year} is: £{average_value:.2f}")
+    else:
+        print(f"No data found for area {postcode_area} in Q{quarter} {year}.")
+
+# Interactive prompt for user input
+user_postcode_area = input("Enter the first three letters of the postcode area (e.g., 'XY3'): ").strip().upper()
+user_year = input("Enter the year (e.g., '2000'): ")
+user_quarter = input("Enter the quarter (1-4): ")
+
+# Validate the user input
+try:
+    user_year = int(user_year)
+    user_quarter = int(user_quarter)
+    assert 1 <= user_quarter <= 4
+    query_average_transaction_value(user_postcode_area, user_year, user_quarter)
+except ValueError:
+    print("Year and quarter should be numbers.")
+except AssertionError:
+    print("Quarter should be between 1 and 4.")
