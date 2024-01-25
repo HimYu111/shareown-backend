@@ -11,6 +11,12 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
+@app.route('/', methods=['GET'])
+def hello_world():
+    return jsonify({
+        "msg": "Hi"
+    })
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
