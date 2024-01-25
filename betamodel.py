@@ -375,7 +375,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 print(percentage_owned)
                 if percentage_owned >= 25 and age_at_25_percent_SO is None:
                     age_at_25_percent_SO = df.at[i, 'age_at_time']
-                    break
 
                 if percentage_owned >= 100 and age_at_SO is None:
                     age_at_SO = int(df.at[i, 'age_at_time'])                
