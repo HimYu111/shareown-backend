@@ -375,11 +375,10 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 # Cap at 100% ownership
                 df.at[i, 'shared_ownership_share'] = percentage_owned
-                if percentage_owned >= 100:
-                    print(f"At {df.at[i, 'simulated_dates_quarter']}, you have reached 100% ownership of the house.")
+                if df.at[i, 'shared_ownership_share'] >= 1.0:
                     age_at_SO = int(df.at[i, 'age_at_time'])
+                    print(f"At {df.at[i, 'simulated_dates_quarter']}, you have reached 100% ownership of the house.")
                     break
-
                 print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
 
 
