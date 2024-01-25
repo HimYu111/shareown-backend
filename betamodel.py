@@ -355,7 +355,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
                 df.at[i, 'shared_ownership_share'] = total_share_owned
                 last_percentage_owned = total_share_owned  # Update the last percentage owned
-                percentage_threshold = 25  # Set the threshold for shared ownership
+                percentage_threshold = 0.25  # Set the threshold for shared ownership
                 age_at_25_percent_SO = None  # Initialize the variable to store the age
 
                 for i in range(df.index[-1], df.index[0] - 1, -1):
