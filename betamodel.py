@@ -355,14 +355,12 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
                 df.at[i, 'shared_ownership_share'] = total_share_owned
                 last_percentage_owned = total_share_owned  # Update the last percentage owned
-                percentage_threshold = 0.25  # Set the threshold for shared ownership
-                age_at_25_percent_SO = None  # Initialize the variable to store the age
-
-                for i in range(df.index[-1], df.index[0] - 1, -1):
-                    if df.at[i, 'shared_ownership_share'] >= percentage_threshold:
-                        age_at_25_percent_SO = df.at[i, 'age_at_time']
-                        break 
-
+            
+            age_at_25_percent_SO = None
+            for i in range(df.index[-1], df.index[0] - 1, -1):
+                if df.at[i, 'shared_ownership_share'] >= 0.25:
+                    age_at_25_percent_SO = df.at[i, 'age_at_time']
+                    break
                 # Update other financial elements
                 SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
                 Service_Charge = SO_Rent * service_charge_ratio
