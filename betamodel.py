@@ -54,6 +54,7 @@ df['sum dummy'] = 0
 df['home ownership dummy'] = 0
 df[simulated_dates_quarter] = df[simulated_date].apply(date_to_quarter)
 df['shared_ownership_share'] = 0
+df["simulated_savings_columnSO"] = 0
 
 
 def get_house_price_data(consumption_percentage, savings, age, income):
@@ -339,7 +340,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
             for i in range(start_index, df.index[0] - 1, -1):
                 home_price = df.at[i, price_column]
                 current_savings = df.at[i, simulated_savings_column]
-                disposable_income = df.at[i, simulated_income_column] - df.at[i, simulated_rent_column]
+               
 
                 previous_share_owned = df.at[i + 1, 'shared_ownership_share'] if i < df.index[-1] else 0
 
@@ -367,8 +368,10 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 total_paid_towards_house = required_deposit_SO + cumulative_mortgage_payments
                 percentage_owned = min(100, max(math.floor((total_paid_towards_house / home_price) * 100), last_percentage_owned))
-
+                
+                df.at[i, "simulated_savings_columnSO"] = df.at[i, simulated_income_column] - (df.at[i, simulated_income_column]*consumption_percentage) - SO_Rent - Service_Charge - mortgage_payment_SO
                 # Cap at 100% ownership
+
                 df.at[i, 'shared_ownership_share'] = percentage_owned
                 if percentage_owned >= 100:
                     print(f"At {df.at[i, 'simulated_dates_quarter']}, you have reached 100% ownership of the house.")
@@ -382,6 +385,9 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     x = 100 - consumption_percentage
     transformed_wealth_data = int(accumulated_wealth_at_67/((1+0.03)**(67-age)))
     initial_share = math.floor(initial_savings/ initial_home_price )
+    
+    
+    simulated_SO = df.at["simulated_savings_columnSO"].to_json(orient='records')
 
     age_at_time_data = df['age_at_time'].to_json(orient='records')
     accumulated_wealth_data = df[Accumulated_wealth_column].to_json(orient='records')
@@ -401,8 +407,8 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         "latest_simulated_value": latest_simulated_column_value,
         "shared_ownership_share": shared_ownership_share_data,
         "transformed_wealth": transformed_wealth_data,
-        "initial_share": initial_share
-
+        "initial_share": initial_share,
+        "simulated_SO": simulated_SO
     }
     return results
  
