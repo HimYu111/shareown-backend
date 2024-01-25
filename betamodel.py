@@ -338,11 +338,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
             cumulative_mortgage_payments = 0
             last_percentage_owned = 0  # Track the last percentage owned to ensure it never decreases
             for i in range(start_index, df.index[0] - 1, -1):
-                for i in range(df.index[-1], df.index[0] - 1, -1):
-                    if df.at[i, 'shared_ownership_share'] >= 25 and age_at_25_percent_SO is None:
-                        age_at_25_percent_SO = df.at[i, 'age_at_time']
-                        break
-
                 home_price = df.at[i, price_column]
                 current_savings = df.at[i, simulated_savings_column]
                 disposable_income = df.at[i, simulated_income_column] - df.at[i, simulated_rent_column]
@@ -376,10 +371,15 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 # Cap at 100% ownership
                 df.at[i, 'shared_ownership_share'] = percentage_owned
+                print(percentage_owned)
+                if percentage_owned >= 25 and age_at_25_percent_SO is None:
+                    age_at_25_percent_SO = df.at[i, 'age_at_time']
+                    break
+
                 if percentage_owned >= 100 and age_at_SO is None:
                     age_at_SO = int(df.at[i, 'age_at_time'])                
                 print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
-            print(df['shared_ownership_share'])
+
 
 
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
@@ -391,7 +391,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     accumulated_wealth_data = df[Accumulated_wealth_column].to_json(orient='records')
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
-
+    print(shared_ownership_share_data)
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
