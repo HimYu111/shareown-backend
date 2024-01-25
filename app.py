@@ -1,6 +1,6 @@
 import os
 import sys
-
+import traceback
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
@@ -29,6 +29,8 @@ def predict():
         results = betamodel.get_house_price_data(consumption_percentage, savings, age, income)
         return jsonify(results)
     except Exception as e:
+        print(e)
+        traceback.print_exc()
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
