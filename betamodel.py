@@ -332,6 +332,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 break
 
         age_at_25_percent_SO = None
+        age_at_SO = None
         if start_index is None:
             print("You currently do not have enough savings for shared ownership.")
         else:
