@@ -355,6 +355,13 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
                 df.at[i, 'shared_ownership_share'] = total_share_owned
                 last_percentage_owned = total_share_owned  # Update the last percentage owned
+                percentage_threshold = 25  # Set the threshold for shared ownership
+                age_at_25_percent_SO = None  # Initialize the variable to store the age
+
+                for i in range(df.index[-1], df.index[0] - 1, -1):
+                    if df.at[i, 'shared_ownership_share'] >= percentage_threshold:
+                        age_at_25_percent_SO = df.at[i, 'age_at_time']
+                        break 
 
                 # Update other financial elements
                 SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
@@ -377,11 +384,15 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
 
-    affordability_status = df['Affordability Status'].iloc[-1]
+        for i in range(df.index[-1], df.index[0] - 1, -1):
+            if df.at[i, 'shared_ownership_share'] >= 25:
+                return df.at[i, 'age_at_time']
+            return None
+
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
-    x = 100 - consumption_percentage
     transformed_wealth_data = int(accumulated_wealth_at_67/((1+0.03)**(67-age)))
     initial_share = math.floor(initial_savings/ initial_home_price )
+    results['age_at_25_percent_SO'] = age_at_25_percent_SO
 
     age_at_time_data = df['age_at_time'].to_json(orient='records')
     accumulated_wealth_data = df[Accumulated_wealth_column].to_json(orient='records')
@@ -391,6 +402,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
+        "age_at_25_percent_SO": age_at_25_percent_SO,        
         "accumulated_wealth_at_67": df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
         "x": 100 - consumption_percentage,
         "house_price": df.at[df.index[-2], simulated_column],
