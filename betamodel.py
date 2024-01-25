@@ -339,7 +339,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
             last_percentage_owned = 0  # Track the last percentage owned to ensure it never decreases
             for i in range(start_index, df.index[0] - 1, -1):
                 for i in range(df.index[-1], df.index[0] - 1, -1):
-                    if df.at[i, 'shared_ownership_share'] >= 0.25 and age_at_25_percent_SO is None:
+                    if df.at[i, 'shared_ownership_share'] >= 25 and age_at_25_percent_SO is None:
                         age_at_25_percent_SO = df.at[i, 'age_at_time']
                         break
 
@@ -376,9 +376,10 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 # Cap at 100% ownership
                 df.at[i, 'shared_ownership_share'] = percentage_owned
-                if df.at[i, 'shared_ownership_share'] >= 1.0 and age_at_SO is None:
+                if percentage_owned >= 100 and age_at_SO is None:
                     age_at_SO = int(df.at[i, 'age_at_time'])                
                 print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
+            print(df['shared_ownership_share'])
 
 
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
@@ -407,7 +408,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         "transformed_wealth": transformed_wealth_data,
         "initial_share": initial_share
     }
-    print(results)
-
+    
     return results
  
