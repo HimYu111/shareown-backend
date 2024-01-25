@@ -14,7 +14,7 @@ CORS(app, resources={r"*": {"origins": "*"}})
 @app.route('/', methods=['GET'])
 def hello_world():
     return jsonify({
-        "msg": "Hi"
+        "msg": "POg"
     })
 
 @app.route('/predict', methods=['POST'])
