@@ -384,10 +384,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
                 print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
 
-        for i in range(df.index[-1], df.index[0] - 1, -1):
-            if df.at[i, 'shared_ownership_share'] >= 25:
-                return df.at[i, 'age_at_time']
-            return None
 
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
     transformed_wealth_data = int(accumulated_wealth_at_67/((1+0.03)**(67-age)))
