@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime
+import math
 
 def date_to_quarter(date):
     year = date.year
@@ -56,73 +57,71 @@ df[simulated_dates_quarter] = df[simulated_date].apply(date_to_quarter)
 df['shared_ownership_share'] = 0
 
 
+################################################################################################
+#base values and free variables
+#House price index
+df.at[df.index[-1], index_column] = 100
+for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    current_price = df.at[i, price_column]
+    previous_price = df.at[i + 1, price_column]
+    previous_index = df.at[i + 1, index_column]
+    df.at[i, index_column] = previous_index * (current_price / previous_price)
+
+#Simulated house prices
+base_simulated_price = df.at[df.index[0], price_column]
+df.at[df.index[-1], simulated_column] = base_simulated_price
+for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    current_index = df.at[i, index_column]
+    base_index = df.at[df.index[-1], index_column]
+    df.at[i, simulated_column] = base_simulated_price * (current_index / base_index)
+
+#Adjusted inflation
+df.at[df.index[-1], adjusted_inflation_column] = 100  # Oldest entry for the inflation
+for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    current_inflation = df.at[i, inflation_column]
+    previous_inflation = df.at[i + 1, inflation_column]
+    previous_adjusted_inflation = df.at[i + 1, adjusted_inflation_column]
+    df.at[i, adjusted_inflation_column] = previous_adjusted_inflation * (current_inflation / previous_inflation)
+    adjusted_inflation = df.at[i, adjusted_inflation_column]
+
+#Simulated rent monthly
+for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    simulated_house_price = df.at[i, simulated_column]
+    rent_factor = 0.045/12
+    df.at[i, simulated_rent_column] = simulated_house_price * rent_factor
+
+#Simulated rent quarterly
+for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    df.at[i, simulated_rent_column2] = df.at[i, simulated_rent_column] * 3
+
+#required deposit
+for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    df.at[i, required_deposit_column] = df.at[i, simulated_column] * 0.05
+
+
+#Simulated variable mortgage rate
+for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
+    if i >= df.shape[0]:
+        break
+    df.at[i, simulated_mortgage_rate_column] =  df.at[i, BoE_interest_column] + 0.003
+
 def get_house_price_data(consumption_percentage, savings, age, income):
 
     ################################################################################################
     #inputs
     quarterly_income = 3*income
-
-
-    ################################################################################################
-    #base values and free variables
-    #House price index
-    df.at[df.index[-1], index_column] = 100
-    for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        current_price = df.at[i, price_column]
-        previous_price = df.at[i + 1, price_column]
-        previous_index = df.at[i + 1, index_column]
-        df.at[i, index_column] = previous_index * (current_price / previous_price)
-
-    #Simulated house prices
-    base_simulated_price = df.at[df.index[0], price_column]
-    df.at[df.index[-1], simulated_column] = base_simulated_price
-    for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        current_index = df.at[i, index_column]
-        base_index = df.at[df.index[-1], index_column]
-        df.at[i, simulated_column] = base_simulated_price * (current_index / base_index)
-
-    #Adjusted inflation
-    df.at[df.index[-1], adjusted_inflation_column] = 100  # Oldest entry for the inflation
-    for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        current_inflation = df.at[i, inflation_column]
-        previous_inflation = df.at[i + 1, inflation_column]
-        previous_adjusted_inflation = df.at[i + 1, adjusted_inflation_column]
-        df.at[i, adjusted_inflation_column] = previous_adjusted_inflation * (current_inflation / previous_inflation)
-        adjusted_inflation = df.at[i, adjusted_inflation_column]
-
-    #Simulated rent monthly
-    for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        simulated_house_price = df.at[i, simulated_column]
-        rent_factor = 0.045/12
-        df.at[i, simulated_rent_column] = simulated_house_price * rent_factor
-
-    #Simulated rent quarterly
-    for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        df.at[i, simulated_rent_column2] = df.at[i, simulated_rent_column] * 3
-
-    #required deposit
-    for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        df.at[i, required_deposit_column] = df.at[i, simulated_column] * 0.05
-
-
-    #Simulated variable mortgage rate
-    for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        df.at[i, simulated_mortgage_rate_column] =  df.at[i, BoE_interest_column] + 0.003
-
 
     #Simulated income
     df.at[df.index[-1], simulated_income_column] = quarterly_income
@@ -141,7 +140,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
             growth_factor = 1.03
 
         df.at[i, simulated_income_column] = previous_income * growth_factor
-
 
 
     ################################################################################################
@@ -307,80 +305,73 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     ################################################################################################
     #Shared ownership
-    import math
 
-    # Ask the user if they want to explore shared ownership options
-    explore_shared_ownership = 'yes' #' #input("Do you want to explore shared ownership options? (yes/no): ").lower()
+    min_shared_ownership = 0.25  # Minimum share for shared ownership
+    rent_percentage = 0.0275  # Rent percentage of property value
+    service_charge_ratio = 1 / 3  # Ratio of service charge to rent
+    max_LTV_SO = 0.95  # Maximum loan-to-value ratio for shared ownership
+    mortgage_term = 67 - age  # Mortgage term ending at age 67
 
-    if explore_shared_ownership == 'yes':
-        min_shared_ownership = 0.25  # Minimum share for shared ownership
-        rent_percentage = 0.0275  # Rent percentage of property value
-        service_charge_ratio = 1 / 3  # Ratio of service charge to rent
-        max_LTV_SO = 0.95  # Maximum loan-to-value ratio for shared ownership
-        mortgage_term = 67 - age  # Mortgage term ending at age 67
+    # Find the starting point for shared ownership
+    start_index = None
+    for i in range(df.index[-1], -1, -1):
+        current_savings = df.at[i, simulated_savings_column]
+        home_price = df.at[i, price_column]
+        required_deposit_SO = 0.05 * min_shared_ownership * home_price
+        if current_savings >= required_deposit_SO:
+            start_index = i
+            initial_savings = current_savings
+            initial_home_price = home_price
+            break
 
-        # Find the starting point for shared ownership
-        start_index = None
-        for i in range(df.index[-1], -1, -1):
-            current_savings = df.at[i, simulated_savings_column]
+    age_at_25_percent_SO = None
+    age_at_SO = None
+    if start_index is None:
+        print("You currently do not have enough savings for shared ownership.")
+    else:
+        cumulative_mortgage_payments = 0
+        last_percentage_owned = 0  # Track the last percentage owned to ensure it never decreases
+        for i in range(start_index, df.index[0] - 1, -1):
             home_price = df.at[i, price_column]
-            required_deposit_SO = 0.05 * min_shared_ownership * home_price
-            if current_savings >= required_deposit_SO:
-                start_index = i
-                initial_savings = current_savings
-                initial_home_price = home_price
-                break
+            current_savings = df.at[i, simulated_savings_column]
+            disposable_income = df.at[i, simulated_income_column] - df.at[i, simulated_rent_column]
 
-        age_at_25_percent_SO = None
-        age_at_SO = None
-        if start_index is None:
-            print("You currently do not have enough savings for shared ownership.")
-        else:
-            cumulative_mortgage_payments = 0
-            last_percentage_owned = 0  # Track the last percentage owned to ensure it never decreases
-            for i in range(start_index, df.index[0] - 1, -1):
-                home_price = df.at[i, price_column]
-                current_savings = df.at[i, simulated_savings_column]
-                disposable_income = df.at[i, simulated_income_column] - df.at[i, simulated_rent_column]
+            previous_share_owned = df.at[i + 1, 'shared_ownership_share'] if i < df.index[-1] else 0
 
-                previous_share_owned = df.at[i + 1, 'shared_ownership_share'] if i < df.index[-1] else 0
+            # Check if we can buy more shares
+            if current_savings >= home_price * 0.01:  # Check if savings are enough for at least 1% share
+                share_affordable = current_savings / home_price
+                share_purchased = max(0, math.floor(share_affordable * 100) / 100)
+                share_purchased = min(share_purchased, 1 - previous_share_owned)
+                current_savings -= share_purchased * home_price  # Update savings after purchasing
+            else:
+                share_purchased = 0
 
-                # Check if we can buy more shares
-                if current_savings >= home_price * 0.01:  # Check if savings are enough for at least 1% share
-                    share_affordable = current_savings / home_price
-                    share_purchased = max(0, math.floor(share_affordable * 100) / 100)
-                    share_purchased = min(share_purchased, 1 - previous_share_owned)
-                    current_savings -= share_purchased * home_price  # Update savings after purchasing
-                else:
-                    share_purchased = 0
+            total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
+            df.at[i, 'shared_ownership_share'] = total_share_owned
+            last_percentage_owned = total_share_owned  # Update the last percentage owned
+        
+            # Update other financial elements
+            SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
+            Service_Charge = SO_Rent * service_charge_ratio
+            years_left = 67 - age
+            mortgage_amount = min((home_price * total_share_owned) - required_deposit_SO, home_price * max_LTV_SO)
+            mortgage_payment_SO = mortgage_amount / years_left
 
-                total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
-                df.at[i, 'shared_ownership_share'] = total_share_owned
-                last_percentage_owned = total_share_owned  # Update the last percentage owned
-            
-                # Update other financial elements
-                SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
-                Service_Charge = SO_Rent * service_charge_ratio
-                years_left = 67 - age
-                mortgage_amount = min((home_price * total_share_owned) - required_deposit_SO, home_price * max_LTV_SO)
-                mortgage_payment_SO = mortgage_amount / years_left
+            cumulative_mortgage_payments += mortgage_payment_SO
 
-                cumulative_mortgage_payments += mortgage_payment_SO
+            total_paid_towards_house = required_deposit_SO + cumulative_mortgage_payments
+            percentage_owned = min(100, max(math.floor((total_paid_towards_house / home_price) * 100), last_percentage_owned))
 
-                total_paid_towards_house = required_deposit_SO + cumulative_mortgage_payments
-                percentage_owned = min(100, max(math.floor((total_paid_towards_house / home_price) * 100), last_percentage_owned))
+            # Cap at 100% ownership
+            df.at[i, 'shared_ownership_share'] = percentage_owned
+            print(percentage_owned)
+            if percentage_owned >= 25 and age_at_25_percent_SO is None:
+                age_at_25_percent_SO = df.at[i, 'age_at_time']
 
-                # Cap at 100% ownership
-                df.at[i, 'shared_ownership_share'] = percentage_owned
-                print(percentage_owned)
-                if percentage_owned >= 25 and age_at_25_percent_SO is None:
-                    age_at_25_percent_SO = df.at[i, 'age_at_time']
-
-                if percentage_owned >= 100 and age_at_SO is None:
-                    age_at_SO = int(df.at[i, 'age_at_time'])                
-                print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
-
-
+            if percentage_owned >= 100 and age_at_SO is None:
+                age_at_SO = int(df.at[i, 'age_at_time'])                
+            print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
 
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
     transformed_wealth_data = int(accumulated_wealth_at_67/((1+0.03)**(67-age)))
@@ -391,7 +382,6 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     accumulated_wealth_data = df[Accumulated_wealth_column].to_json(orient='records')
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
-    print(shared_ownership_share_data)
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
