@@ -35,6 +35,7 @@ BoE_interest_column = 'BoE interest rates'
 simulated_mortgage_rate_column = 'Simulated variable mortgage rates'
 simulated_mortgage_payment_column = 'Simulated mortgage payments'
 Accumulated_wealth_column = 'Accumulated Wealth'
+share_ownership_wealth_column = 'SO wealth'
 
 # Initialize other columns to 0 or appropriate default values
 df[index_column] = 0
@@ -55,6 +56,7 @@ df['sum dummy'] = 0
 df['home ownership dummy'] = 0
 df[simulated_dates_quarter] = df[simulated_date].apply(date_to_quarter)
 df['shared_ownership_share'] = 0
+df['share_ownership_wealth_column'] = 0
 
 
 ################################################################################################
@@ -301,14 +303,14 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         accumulated_mortgage_payments_at_67 = df.at[i, 'cumulative_mortgage_payments']
         saved_wealth_at_67 = df.at[i, 'saved_wealth']
 
-        df.at[i, Accumulated_wealth_column] = house_value_at_67 - (accumulated_mortgage_payments_at_67 + saved_wealth_at_67)
+        df.at[i, Accumulated_wealth_column] = house_value_at_67 - (accumulated_mortgage_payments_at_67) + saved_wealth_at_67
 
     ################################################################################################
     #Shared ownership
 
     min_shared_ownership = 0.25  # Minimum share for shared ownership
     rent_percentage = 0.0275  # Rent percentage of property value
-    service_charge_ratio = 1 / 3  # Ratio of service charge to rent
+    service_charge_ratio = 4 / 3  # Ratio of service charge to rent
     max_LTV_SO = 0.95  # Maximum loan-to-value ratio for shared ownership
     mortgage_term = 67 - age  # Mortgage term ending at age 67
 
@@ -353,10 +355,10 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         
             # Update other financial elements
             SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
-            Service_Charge = SO_Rent * service_charge_ratio
+            Service_Charge = SO_Rent * service_charge_ratio #SC + SO rent
             years_left = 67 - age
             mortgage_amount = min((home_price * total_share_owned) - required_deposit_SO, home_price * max_LTV_SO)
-            mortgage_payment_SO = mortgage_amount / years_left
+            mortgage_payment_SO = (mortgage_amount / years_left) + Service_Charge
 
             cumulative_mortgage_payments += mortgage_payment_SO
 
@@ -373,8 +375,13 @@ def get_house_price_data(consumption_percentage, savings, age, income):
                 age_at_SO = int(df.at[i, 'age_at_time'])                
             print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
 
-    accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
-    transformed_wealth_data = int(accumulated_wealth_at_67/((1+0.03)**(67-age)))
+            df.at[i, share_ownership_wealth_column] = house_value_at_67 - (cumulative_mortgage_payments) + saved_wealth_at_67
+
+
+
+    SOaccumulated_wealth_at_67 = df[df['age_at_time'] == 67][share_ownership_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
+
+    transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
     initial_share = math.floor(initial_savings/ initial_home_price )
 #    results['age_at_25_percent_SO'] = age_at_25_percent_SO
 
@@ -387,6 +394,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         "affordability_status": df['Affordability Status'].iloc[-1],
         "age_at_25_percent_SO": int(age_at_25_percent_SO),        
         "accumulated_wealth_at_67": df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
+        "SOaccumulated_wealth_at_67": int(SOaccumulated_wealth_at_67),
         "x": 100 - consumption_percentage,
         "house_price": df.at[df.index[-2], simulated_column],
         "full_data": df.to_dict(orient="records"),
