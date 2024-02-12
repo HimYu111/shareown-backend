@@ -388,6 +388,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
+        "SOaccumulated_wealth_at_67": SOaccumulated_wealth_at_67,
         "age_at_25_percent_SO": int(age_at_25_percent_SO),        
         "accumulated_wealth_at_67": df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
         "x": 100 - consumption_percentage,
