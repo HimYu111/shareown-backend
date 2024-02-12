@@ -385,6 +385,9 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (4.33*rent_percentage*house_value_at_67*(67-age))
     transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
 
+    accumulated_wealth_at_67 = round(accumulated_wealth_at_67 / 1000) * 1000
+    SOaccumulated_wealth_at_67 = round(SOaccumulated_wealth_at_67 / 1000) * 1000
+    transformed_wealth_data = round(transformed_wealth_data / 1000) * 1000
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
