@@ -381,7 +381,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     SOaccumulated_wealth_at_67 = df[df['age_at_time'] == 67][share_ownership_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
-    transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
+    transformed_wealth_data = (SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
 
     initial_share = math.floor(initial_savings/ initial_home_price )
 #    results['age_at_25_percent_SO'] = age_at_25_percent_SO
