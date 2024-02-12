@@ -382,7 +382,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
 
-    SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (0.33*saved_wealth_at_67)
+    SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (4.33*rent_percentage*house_value_at_67*(67-age))
     transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
 
 
