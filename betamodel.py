@@ -56,7 +56,7 @@ df['sum dummy'] = 0
 df['home ownership dummy'] = 0
 df[simulated_dates_quarter] = df[simulated_date].apply(date_to_quarter)
 df['shared_ownership_share'] = 0
-df['share_ownership_wealth_column'] = 0
+df[share_ownership_wealth_column] = 0
 
 
 ################################################################################################
@@ -380,7 +380,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
 
     SOaccumulated_wealth_at_67 = df[df['age_at_time'] == 67][share_ownership_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
-    accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
+    accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
     transformed_wealth_data = (SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
 
     print(type(SOaccumulated_wealth_at_67))
@@ -394,9 +394,9 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
 
-    SOaccumulated_wealth_at_67 = int(round(SOaccumulated_wealth_at_67/1000))*1000
-    accumulated_wealth_at_67 = int(round(accumulated_wealth_at_67/1000))*1000
-    transformed_wealth_data = int(round(transformed_wealth_data/1000))*1000
+    SOaccumulated_wealth_at_67 = int(round(SOaccumulated_wealth_at_67/1000)*1000)
+    accumulated_wealth_at_67 = int(round(accumulated_wealth_at_67/1000)*1000)
+    transformed_wealth_data = int(round(transformed_wealth_data/1000)*1000)
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
