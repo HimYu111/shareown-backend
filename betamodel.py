@@ -385,6 +385,9 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     print(type(SOaccumulated_wealth_at_67))
 
+    print("SOaccumulated_wealth_at_67:", SOaccumulated_wealth_at_67)
+    print("accumulated_wealth_at_67:", accumulated_wealth_at_67)
+    print("transformed_wealth_data:", transformed_wealth_data)
 
     initial_share = math.floor(initial_savings/ initial_home_price )
 #    results['age_at_25_percent_SO'] = age_at_25_percent_SO
