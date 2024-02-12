@@ -301,7 +301,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         accumulated_mortgage_payments_at_67 = df.at[i, 'cumulative_mortgage_payments']
         saved_wealth_at_67 = df.at[i, 'saved_wealth']
 
-        df.at[i, Accumulated_wealth_column] = house_value_at_67 - accumulated_mortgage_payments_at_67 + saved_wealth_at_67
+        df.at[i, Accumulated_wealth_column] = house_value_at_67 - accumulated_mortgage_payments_at_67 - saved_wealth_at_67
 
     ################################################################################################
     #Shared ownership
@@ -382,7 +382,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
 
-    SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (1.33*saved_wealth_at_67)
+    SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (0.33*saved_wealth_at_67)
     transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
 
 
