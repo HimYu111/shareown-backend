@@ -381,7 +381,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
 
     SOaccumulated_wealth_at_67 = df[df['age_at_time'] == 67][share_ownership_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
     accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
-    transformed_wealth_data = (SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
+    transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age))) 
 
     print(type(SOaccumulated_wealth_at_67))
 
@@ -394,15 +394,15 @@ def get_house_price_data(consumption_percentage, savings, age, income):
     latest_simulated_column_value = df[simulated_column].iloc[-1]
     shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
 
-    SOaccumulated_wealth_at_67 = int(round(SOaccumulated_wealth_at_67/1000)*1000)
-    accumulated_wealth_at_67 = int(round(accumulated_wealth_at_67/1000)*1000)
-    transformed_wealth_data = int(round(transformed_wealth_data/1000)*1000)
+    SOaccumulated_wealth_at_671 = int(round(SOaccumulated_wealth_at_67/1000)*1000)
+    accumulated_wealth_at_671 = int(round(accumulated_wealth_at_67/1000)*1000)
+    transformed_wealth_data1 = int(round(transformed_wealth_data/1000)*1000)
 
     results = {
         "affordability_status": df['Affordability Status'].iloc[-1],
         "age_at_25_percent_SO": int(age_at_25_percent_SO),        
-        "accumulated_wealth_at_67": accumulated_wealth_at_67,
-        "SOaccumulated_wealth_at_67": (SOaccumulated_wealth_at_67),
+        "accumulated_wealth_at_67": accumulated_wealth_at_671,
+        "SOaccumulated_wealth_at_67": (SOaccumulated_wealth_at_671),
         "x": 100 - consumption_percentage,
         "house_price": df.at[df.index[-2], simulated_column],
         "full_data": df.to_dict(orient="records"),
@@ -411,7 +411,7 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         "accumulated_wealth": accumulated_wealth_data,
         "latest_simulated_value": latest_simulated_column_value,
         "shared_ownership_share": shared_ownership_share_data,
-        "transformed_wealth": transformed_wealth_data,
+        "transformed_wealth": transformed_wealth_data1,
         "initial_share": initial_share
     }
     
