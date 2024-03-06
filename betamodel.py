@@ -27,13 +27,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 220000
-FTB = 0
-gross = 47433.7
-consumption = 36000*0.6/12
-age = 25
-savings = 10000
-rent = 800
+#house_price = 220000
+#FTB = 0
+#gross = 47433.7
+#consumption = 1800
+#age = 25
+#savings = 10000
+#rent = 800
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
