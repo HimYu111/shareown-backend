@@ -1,409 +1,442 @@
-import os
+import os as os
 import pandas as pd
-from datetime import datetime
-import math
+import math as math
 
-def date_to_quarter(date):
-    year = date.year
-    quarter = (date.month - 1) // 3 + 1
-    return f'Q{quarter} {year}'
+inflation_adjustment = 0.5
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-excel_path = os.path.join(script_dir, 'refnew.xlsx')
+###############
 
-# Specify the columns to read from the Excel file
-columns_to_read = ['Quarter', 'LONDON HOUSE PRICES (£)', 'Date', 'Simulated date', 'Inflation', 'BoE interest rates']
+savings_rate = 0.03
+inflation = 0.03
+mortgage_rate = 0.04
+house_price_appreciation = 0.05
+house_maintainance_cost = 0.01
+mortgage_term = 30
+transaction_cost = 0
 
-# Read only the specified columns from the Excel file
-df = pd.read_excel(excel_path, usecols=columns_to_read, parse_dates=True, nrows=199)
+############ TO
+LTV = 0.95
+loan_ratio = 4.5
 
-# Define your column names here
-simulated_date = 'Simulated date'
-price_column = 'LONDON HOUSE PRICES (£)'
-inflation_column = 'Inflation'
-simulated_dates_quarter = 'simulated_dates_quarter'
-index_column = 'House price index'
-simulated_column = 'Simulated house prices'
-adjusted_inflation_column = 'Adjusted Inflation'
-simulated_income_column = 'Simulated income (quarterly)'
-simulated_rent_column = 'Simulated Rent (Monthly)'
-simulated_rent_column2 = 'Simulated Rent (Quarterly)'
-simulated_savings_column = 'Simulated savings while renting'
-required_deposit_column = 'Required deposit HO'
-affordability_dummy_column = 'Home Ownership Affordability'
-BoE_interest_column = 'BoE interest rates'
-simulated_mortgage_rate_column = 'Simulated variable mortgage rates'
-simulated_mortgage_payment_column = 'Simulated mortgage payments'
-Accumulated_wealth_column = 'Accumulated Wealth'
+############ SO1
+max_inc_to_exp = 0.4
+rent_appreciation = 0.035
+minimum_initial_share = 0.25
+initial_rent_percent = 0.0275
+staircase_admin = 1000
+service_charge = 0.01
+affordability_cons = 0.4
 
-# Initialize other columns to 0 or appropriate default values
-df[index_column] = 0
-df[adjusted_inflation_column] = 0
-df[simulated_column] = 0
-df[simulated_income_column] = 0
-df[simulated_rent_column] = 0
-df[simulated_rent_column2] = 0
-df[simulated_savings_column] = 0
-df[required_deposit_column] = 0
-df[affordability_dummy_column] = 'not affordable'
-df[BoE_interest_column] = 0.02
-df[simulated_mortgage_rate_column] = 0
-df[simulated_mortgage_payment_column] = 0.0
-df['cumulative_mortgage_payments'] = 0
-df[Accumulated_wealth_column] = 0
-df['sum dummy'] = 0
-df['home ownership dummy'] = 0
-df[simulated_dates_quarter] = df[simulated_date].apply(date_to_quarter)
-df['shared_ownership_share'] = 0
+house_price = 220000
+FTB = 0
+gross = 47433.7
+consumption = 36000*0.6/12
+age = 25
+savings = 10000
+rent = 800
 
+def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
+    #Basic####################################################################
+    num_rows = 68 - age
+    retirement_age = 67
+    df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
 
-################################################################################################
-#base values and free variables
-#House price index
-df.at[df.index[-1], index_column] = 100
-for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    current_price = df.at[i, price_column]
-    previous_price = df.at[i + 1, price_column]
-    previous_index = df.at[i + 1, index_column]
-    df.at[i, index_column] = previous_index * (current_price / previous_price)
+    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD']
 
-#Simulated house prices
-base_simulated_price = df.at[df.index[0], price_column]
-df.at[df.index[-1], simulated_column] = base_simulated_price
-for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    current_index = df.at[i, index_column]
-    base_index = df.at[df.index[-1], index_column]
-    df.at[i, simulated_column] = base_simulated_price * (current_index / base_index)
+    for col in additional_columns:
+        df[col] = 0  # Initialize other columns here
 
-#Adjusted inflation
-df.at[df.index[-1], adjusted_inflation_column] = 100  # Oldest entry for the inflation
-for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    current_inflation = df.at[i, inflation_column]
-    previous_inflation = df.at[i + 1, inflation_column]
-    previous_adjusted_inflation = df.at[i + 1, adjusted_inflation_column]
-    df.at[i, adjusted_inflation_column] = previous_adjusted_inflation * (current_inflation / previous_inflation)
-    adjusted_inflation = df.at[i, adjusted_inflation_column]
+    annual_rent = rent * 12 
+    
 
-#Simulated rent monthly
-for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    simulated_house_price = df.at[i, simulated_column]
-    rent_factor = 0.045/12
-    df.at[i, simulated_rent_column] = simulated_house_price * rent_factor
-
-#Simulated rent quarterly
-for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    df.at[i, simulated_rent_column2] = df.at[i, simulated_rent_column] * 3
-
-#required deposit
-for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    df.at[i, required_deposit_column] = df.at[i, simulated_column] * 0.05
-
-
-#Simulated variable mortgage rate
-for i in range(df.index[-1], df.index[0] - 1, -1):  # Start from the second last row to the top
-    if i >= df.shape[0]:
-        break
-    df.at[i, simulated_mortgage_rate_column] =  df.at[i, BoE_interest_column] + 0.003
-
-def get_house_price_data(consumption_percentage, savings, age, income):
-
-    ################################################################################################
-    #inputs
-    quarterly_income = 3*income
-
-    #Simulated income
-    df.at[df.index[-1], simulated_income_column] = quarterly_income
-
-    for i in range(df.index[-2], df.index[0] - 1, -1):  # Start from the second last row to the top
-        if i >= df.shape[0]:
-            break
-        current_price = df.at[i, price_column]
-        previous_price = df.at[i + 1, price_column]
-        previous_income = df.at[i + 1, simulated_income_column]
-        running_inflation = df.at[i, adjusted_inflation_column]/df.at[i + 1 , adjusted_inflation_column]
-
-        alpha = 0
-        growth_factor = ((1 - alpha) * (running_inflation))    +     (alpha * (current_price / previous_price))
-        if growth_factor > 1.03:
-            growth_factor = 1.03
-
-        df.at[i, simulated_income_column] = previous_income * growth_factor
-
-
-    ################################################################################################
-    #Mortgage dependent variables
-    #Basic inputs
-    LTV = 0.80
-
-    #savings and deposit
-    df.at[df.index[-1], simulated_savings_column] = savings
-    def find_mortgage_start_date(df):
-        mortgage_start_date = None  # Initialize mortgage_start_date
-        for i in range(df.index[-2], df.index[0] - 1, -1):  # Iterate from the second last row to the top
-            previous_savings = df.at[i + 1, simulated_savings_column]
-            simulated_income_quarterly = df.at[i, simulated_income_column]
-            simulated_rent_quarterly = df.at[i, simulated_rent_column2]
-            interest = df.at[i, BoE_interest_column]
-
-            # Calculate savings for the current quarter
-            df.at[i, simulated_savings_column] = (simulated_income_quarterly - (simulated_income_quarterly * consumption_percentage) - simulated_rent_quarterly + (previous_savings * interest))
-            current_savings = df.at[i, simulated_savings_column]
-
-            # Check if current savings exceed required deposit
-            required_deposit = df.at[i, required_deposit_column]
-            if current_savings >= required_deposit:
-                mortgage_start_date = df.at[i, 'Simulated date']
-                break
-        return mortgage_start_date
-
-    mortgage_start_date = find_mortgage_start_date(df)
-    mortgage_term_quarters = None
-
-    #mortgage term
-    if mortgage_start_date:
-        mortgage_start_year = mortgage_start_date.year
-
-        current_year = datetime.now().year
-        age_at_start = age + (mortgage_start_year - current_year)
-
-        # Determine the mortgage term
-        mortgage_term = 67 - age_at_start
-        if mortgage_term > 30:
-            mortgage_term = 30
-        mortgage_term_quarters = mortgage_term * 4
-
-    print(df[simulated_savings_column])
-
-    #mortgage payment
-    # First, find the row index where the user has enough for a deposit
-    deposit_affordable_index = None
-    for i in range(df.index[-1], df.index[0] - 1, -1):
-        if df.at[i, simulated_savings_column] > df.at[i, required_deposit_column]:
-            deposit_affordable_index = i
-            initial_house_value = df.at[i, simulated_column]
-            break
-
-
-
-    if deposit_affordable_index is not None and mortgage_term_quarters is not None:
-        # Calculate initial loan amount
-        loan_amount = initial_house_value * LTV
-        total_payments = mortgage_term_quarters * 3
-
-        # Iterate from the deposit affordable point to the start of the DataFrame
-        for i in range(deposit_affordable_index, df.index[0] - 1, -1):
-            # Update the mortgage rate for the quarter
-            annual_interest_rate = df.at[i, simulated_mortgage_rate_column]
-            monthly_interest_rate = annual_interest_rate / 12
-
-            # Calculate remaining payments
-            payments_made = (deposit_affordable_index - i) * 3  # Convert quarters to months
-            remaining_payments = total_payments - payments_made
-
-            # Mortgage payment calculation
-            if remaining_payments > 0 and monthly_interest_rate != 0:
-                monthly_mortgage_payment = loan_amount * (monthly_interest_rate / (1 - (1 + monthly_interest_rate) ** -remaining_payments))
-                quarterly_mortgage_payment = monthly_mortgage_payment * 3
-            else:
-                quarterly_mortgage_payment = 0
-
-            # Update the DataFrame with the quarterly mortgage payment
-            df.at[i, simulated_mortgage_payment_column] = quarterly_mortgage_payment
-
-            # Update the loan amount for the next quarter
-            if quarterly_mortgage_payment > 0:
-                principal_payment = monthly_mortgage_payment - (loan_amount * monthly_interest_rate)
-                loan_amount = max(loan_amount - principal_payment * 3, 0)  # Ensure loan amount doesn't go negative
-        with pd.option_context('display.max_rows', None):
-            print(df[simulated_mortgage_payment_column])
+    basic_rate = 0.20
+    higher_rate = 0.40
+    additional_rate = 0.45
+    basic_threshold = 37700
+    higher_threshold = 125140
+    if gross <= basic_threshold:
+        tax = gross * basic_rate
+    elif gross <= higher_threshold:
+        tax = basic_threshold * basic_rate + (gross - basic_threshold) * higher_rate
     else:
-        print("Deposit affordable index not found or initial house value is zero.")
+        tax = basic_threshold * basic_rate + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
+    income = gross - tax
+    non_housing_exp = (consumption*12)/income
 
-    #cumalative mortgage payment
-    df['cumulative_mortgage_payments'] = 0.0
-    for i in range(df.index[-1], df.index[0] - 1, -1):
-        if i == df.index[-1]:
-            df.at[i, 'cumulative_mortgage_payments'] = df.at[i, simulated_mortgage_payment_column]
-        else:
-            df.at[i, 'cumulative_mortgage_payments'] = df.at[i, simulated_mortgage_payment_column] + df.at[i + 1, 'cumulative_mortgage_payments']
-
-
-    pd.set_option('display.max_columns', None)
-    print(df['cumulative_mortgage_payments'])
-
-    #mortgage check
-    df['mortgage_check'] = 0.0
-    for i in range(df.index[-1], df.index[0] - 1, -1):
-        # Check if savings are greater than the required deposit
-        if df.at[i, simulated_savings_column] > df.at[i, required_deposit_column]:
-            deposit_affordable_index = i
-            initial_house_value = df.at[i, simulated_column]
-
-        # Set the 'mortgage_check' for the current row
-        if 'initial_house_value' in locals():
-            df.at[i, 'mortgage_check'] = initial_house_value - df.at[i, 'cumulative_mortgage_payments']
-        else:
-            df.at[i, 'mortgage_check'] = 0  # Or some other default value if initial_house_value is not set
-
-    ################################################################################################
-    #Affordability check
-    df['Affordability Status'] = 'not affordable'
-    for i in range(df.index[-1], df.index[0] - 1, -1):
-        current_savings = df.at[i, simulated_savings_column]
-        required_deposit = df.at[i, required_deposit_column]
-        simulated_income_quarterly = df.at[i, simulated_income_column]
-
-        potential_loan_amount = 4.5 * 4 * simulated_income_quarterly
-        house_value = df.at[i, simulated_column]
-        remaining_value = house_value * LTV - required_deposit
-
-        # Check if both savings for deposit and loan amount are sufficient
-        if current_savings >= required_deposit and potential_loan_amount >= remaining_value:
-            df.at[i, 'Affordability Status'] = 'affordable'
-            break  # Stop the loop as we found the point where the us
-
-    ################################################################################################
-    #Accumulation
-    df['saved_wealth'] = 0.0
-    current_year = datetime.now().year
-    df['age_at_time'] = age + (df[simulated_date].dt.year - current_year)
-
-    tracked_saved_wealth = 0.0
-    for i in range(df.index[-1], df.index[0] - 1, -1):
-        mortgage_paid_off = df.at[i, 'mortgage_check'] < 0
-        under_retirement_age = df.at[i, 'age_at_time'] < 67
-
-        if mortgage_paid_off and under_retirement_age:
-            income = df.at[i, simulated_income_column]
-            consumption = income * consumption_percentage
-            interest_rate = df.at[i, BoE_interest_column]  # Convert interest rate to a decimal
-
-            # Update tracked saved wealth
-            tracked_saved_wealth = tracked_saved_wealth * (1 + interest_rate) + income - consumption
-
-        df.at[i, 'saved_wealth'] = tracked_saved_wealth
-
-    #Wealth accumulated
     for i in range(len(df)):
-        house_value_at_67 = df.at[i, simulated_column]
-        accumulated_mortgage_payments_at_67 = df.at[i, 'cumulative_mortgage_payments']
-        saved_wealth_at_67 = df.at[i, 'saved_wealth']
-
-        df.at[i, Accumulated_wealth_column] = house_value_at_67 - accumulated_mortgage_payments_at_67 - saved_wealth_at_67
-
-    ################################################################################################
-    #Shared ownership
-
-    min_shared_ownership = 0.25  # Minimum share for shared ownership
-    rent_percentage = 0.0275  # Rent percentage of property value
-    service_charge_ratio = 1 / 3  # Ratio of service charge to rent
-    max_LTV_SO = 0.95  # Maximum loan-to-value ratio for shared ownership
-    mortgage_term = 67 - age  # Mortgage term ending at age 67
-
-    # Find the starting point for shared ownership
-    start_index = None
-    for i in range(df.index[-1], -1, -1):
-        current_savings = df.at[i, simulated_savings_column]
-        home_price = df.at[i, price_column]
-        required_deposit_SO = 0.05 * min_shared_ownership * home_price
-        if current_savings >= required_deposit_SO:
-            start_index = i
-            initial_savings = current_savings
-            initial_home_price = home_price
-            break
-
-    age_at_25_percent_SO = None
-    age_at_SO = None
-    if start_index is None:
-        print("You currently do not have enough savings for shared ownership.")
-    else:
-        cumulative_mortgage_payments = 0
-        last_percentage_owned = 0  # Track the last percentage owned to ensure it never decreases
-        for i in range(start_index, df.index[0] - 1, -1):
-            home_price = df.at[i, price_column]
-            current_savings = df.at[i, simulated_savings_column]
-            disposable_income = df.at[i, simulated_income_column] - df.at[i, simulated_rent_column]
-
-            previous_share_owned = df.at[i + 1, 'shared_ownership_share'] if i < df.index[-1] else 0
-
-            # Check if we can buy more shares
-            if current_savings >= home_price * 0.01:  # Check if savings are enough for at least 1% share
-                share_affordable = current_savings / home_price
-                share_purchased = max(0, math.floor(share_affordable * 100) / 100)
-                share_purchased = min(share_purchased, 1 - previous_share_owned)
-                current_savings -= share_purchased * home_price  # Update savings after purchasing
-            else:
-                share_purchased = 0
-
-            total_share_owned = max(last_percentage_owned, previous_share_owned + share_purchased)
-            df.at[i, 'shared_ownership_share'] = total_share_owned
-            last_percentage_owned = total_share_owned  # Update the last percentage owned
+        # Period
+        df.at[i, 'E'] = df.at[i, 'D'] - age
         
-            # Update other financial elements
-            SO_Rent = (1 - total_share_owned) * home_price * rent_percentage
-            Service_Charge = SO_Rent * service_charge_ratio
-            years_left = 67 - age
-            mortgage_amount = min((home_price * total_share_owned) - required_deposit_SO, home_price * max_LTV_SO)
-            mortgage_payment_SO = mortgage_amount / years_left
+    #Calculate house price appreciation for each year and set in 'F'
+        df.at[i, 'F'] = house_price * ((1 + house_price_appreciation) ** df.at[i, 'E'])
+                    
+    #income growth 
+        if 22 <= df.at[i, 'D'] <= 29:
+            growth = 0.036
+        elif 30 <= df.at[i, 'D'] <= 39:
+            growth = 0.027
+        elif 40 <= df.at[i, 'D'] <= 49:
+            growth = 0.006
+        elif 50 <= df.at[i, 'D'] <= 59:
+            growth = -0.01
+        elif df.at[i, 'D'] >= 60:
+            growth = 0.0
+        else:
+            growth = None  # For ages outside the specified ranges 
+        df.at[i, 'G'] = growth
+    
+    #income growth inflation adjustment
+        df.at[i, 'H'] = df.at[i, 'G'] + (inflation_adjustment*inflation)
 
-            cumulative_mortgage_payments += mortgage_payment_SO
+    #income and non housing consumption
+        df.at[0, 'I'] = income
+        df.at[0, 'J'] = df.at[0, 'I'] * non_housing_exp
+        for i in range(1, len(df)):
+            if df.at[i-1, 'I'] is not None and df.at[i, 'H'] is not None:
+                df.at[i, 'I'] = df.at[i-1, 'I'] * (1 + df.at[i, 'H'])
+            else:
+                df.at[i, 'I'] = None
 
-            total_paid_towards_house = required_deposit_SO + cumulative_mortgage_payments
-            percentage_owned = min(100, max(math.floor((total_paid_towards_house / home_price) * 100), last_percentage_owned))
+            df.at[i, 'J'] = df.at[i, 'I'] * non_housing_exp
+            
+    #private rent and savings 
+        df.at[0, 'K'] = annual_rent
+        df.at[0, 'L'] = df.at[0, 'I'] - df.at[0, 'J'] - df.at[0, 'K'] 
 
-            # Cap at 100% ownership
-            df.at[i, 'shared_ownership_share'] = percentage_owned
-            print(percentage_owned)
-            if percentage_owned >= 25 and age_at_25_percent_SO is None:
-                age_at_25_percent_SO = df.at[i, 'age_at_time']
+        for i in range(1, len(df)):
+            if df.at[i-1, 'K'] is not None:
+                df.at[i, 'K'] = df.at[i-1, 'K'] * (1 + ((0.5*inflation)+(0.5*house_price_appreciation)))
+            else:
+                df.at[i, 'K'] = None
+        
+        #Annual Savings 
+            df.at[i, 'L'] = df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'K'] 
 
-            if percentage_owned >= 100 and age_at_SO is None:
-                age_at_SO = int(df.at[i, 'age_at_time'])                
-            print(f"At {df.at[i, 'simulated_dates_quarter']}, you own {percentage_owned}% of the house.")
+     #Total Savings 
+        df.at[0, 'M'] = df.at[0, 'L'] + savings
+        for i in range(1, len(df)):
+            if df.at[i-1, 'M'] is not None:
+                df.at[i, 'M'] = df.at[i-1, 'M']*(1 + savings_rate) + df.at[i, 'L']
+            else:
+                df.at[i, 'M'] = None
 
-    accumulated_wealth_at_67 = df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable'
-    initial_share = math.floor(initial_savings/ initial_home_price )
-#    results['age_at_25_percent_SO'] = age_at_25_percent_SO
+################################################################ 
+#SDLT 
+    for i in range(len(df)):
+        # SDLT FTB
+        if df.at[i, 'F'] >= 425000:
+            df.at[i, 'N'] = 0.05 * (df.at[i, 'F'] - 425000)
+        else: 
+                df.at[i, 'N'] = 0 
+        # SDLT STB     
+        if df.at[i, 'F'] >= 250000:
+            df.at[i, 'O'] = 0.05 * (df.at[i, 'F'] - 250000)
+        else: 
+                df.at[i, 'O'] = 0 
+        df.at[i, 'P'] = (FTB * df.at[i, 'N']) + ((1 - FTB)*df.at[i, 'O']) 
 
-    age_at_time_data = df['age_at_time'].to_json(orient='records')
-    accumulated_wealth_data = df[Accumulated_wealth_column].to_json(orient='records')
-    latest_simulated_column_value = df[simulated_column].iloc[-1]
-    shared_ownership_share_data = df['shared_ownership_share'].to_json(orient='records')
+        #Total savings net of SDLT and transaction cost = deposit
+        df.at[i, 'Q'] = df.at[i, 'M']  - df.at[i, 'P'] - transaction_cost
+        #deposit constraints
+        if df.at[i, 'Q'] >= (1 - LTV)*df.at[i, 'F']:
+            df.at[i, 'R'] = 1 
+        else:
+            df.at[i, 'R'] = 0 
+        df['S'] = df['R'].cumsum()
+        df['S'] = (df['S'] >= 1).astype(int)
+        #income constraint
+        if df.at[i, 'I']* loan_ratio >= df.at[i, 'F'] - df.at[i, 'Q']:
+            df.at[i, 'T'] = 1 
+        else:
+            df.at[i, 'T'] = 0 
+        #income constraint 1 
+        df['U'] = df['T'].cumsum()
+        df['U'] = (df['U'] >= 1).astype(int)
+        #home buying decision
+        df.at[i, 'V'] = df.at[i, 'S']*df.at[i, 'U']
+    #home buying indicator  
+    df.at[0, 'W'] = 1 if df.at[0, 'V'] != 0 else 0
+    for i in range(1, len(df)):
+        if df.at[i, 'V'] == df.at[i-1, 'V']:
+            df.at[i, 'W'] = 0
+        else:
+            df.at[i, 'W'] = 1
 
-    SOaccumulated_wealth_at_67 = accumulated_wealth_at_67 + (4.33*rent_percentage*house_value_at_67*(67-age))
-    transformed_wealth_data = int(SOaccumulated_wealth_at_67/((1+0.03)**(67-age)))
+    for i in range(len(df)):
+        # Mortgage loan
+        if i == 0 or (df.at[i, 'V'] == 1 and df.at[i-1, 'V'] == 0):
+            df.at[i, 'X'] = df.at[i, 'V'] * (df.at[i, 'F'] - df.at[i, 'Q'])
+        else:
+            df.at[i, 'X'] = 0
+        
+        # Homeowner Savings
+        if df.at[i, 'W'] == 1:
+            df.at[i, 'Y'] = 0
+        else:
+            df.at[i, 'Y'] = df.at[i, 'V'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * house_maintainance_cost)
+        
+        # Outstanding Loan
+        if i == 0:
+            if df.at[i, 'W'] == 1: 
+                df.at[i, 'Z'] = df.at[i, 'X']
+            else: 
+                df.at[i, 'Z'] = 0 - df.at[i, 'Y']  # Adjusted to handle the case for the first row
+        else:
+            if df.at[i, 'W'] == 1:
+                df.at[i, 'Z'] = df.at[i, 'X']
+            else:
+                df.at[i, 'Z'] = df.at[i-1, 'Z'] * (1 + mortgage_rate) - df.at[i, 'Y']
+        
+    # Outstanding Loan adjusted
+    for i in range(len(df)):
+        df.at[i, 'AA'] = max(df.at[i, 'Z'], 0)
+        
+        # Savings indicator
+        if i > 0 and df.at[i, 'Z'] <= 0 < df.at[i-1, 'Z']:
+            df.at[i, 'AB'] = -df.at[i, 'Z'] * ((1 + savings_rate) / (1 + mortgage_rate))
+        else:
+            df.at[i, 'AB'] = 0
+    
+    # Repayment indicator
+    df.at[0, 'AC'] = 0
+    df.at[0, 'AD'] = 0
+    df.at[0, 'AE'] = df.at[0, 'AC'] * df.at[0, 'Y']
+    for i in range(1, len(df)):
+        df.at[i, 'AC'] = 1 if df.at[i, 'AB'] > 0 or df.at[i-1, 'AC'] > 0 else 0
+        
+        # Repayment dummy
+        df.at[i, 'AD'] = 1 if df.at[i, 'AC'] != df.at[i-1, 'AC'] else 0
+    
+    # Period Savings
+    for i in range(len(df)):
+        if df.at[i, 'AD'] == 1:
+            df.at[i, 'AE'] = df.at[i, 'AB']
+        else:
+            df.at[i, 'AE'] = df.at[i, 'AC'] * df.at[i, 'Y']
+    #Liquid wealth
+    df.at[0, 'AF'] = df.at[0, 'AE'] 
+    df.at[0, 'AG'] = (1 - df.at[0, 'V']) * df.at[0, 'M'] + df.at[0, 'V'] * df.at[0, 'AF']
+    for i in range(1, len(df)):
+        df.at[i, 'AF'] = df.at[i-1, 'AF'] * (1 + savings_rate) + df.at[i, 'AE']
+        df.at[i, 'AG'] = (1 - df.at[i, 'V']) * df.at[i, 'M'] + df.at[i, 'V'] * df.at[i, 'AF']
 
-    accumulated_wealth_at_67 = round(accumulated_wealth_at_67 / 1000) * 1000
-    SOaccumulated_wealth_at_67 = round(SOaccumulated_wealth_at_67 / 1000) * 1000
-    transformed_wealth_data = round(transformed_wealth_data / 1000) * 1000
+    for i in range(len(df)):
+    #Housing wealth
+        df.at[i, 'AH'] = df.at[i, 'V']*(df.at[i, 'F'] - df.at[i, 'AA'] ) 
+    #inflation index
+        df.at[i, 'AI'] = (1 + inflation)**df.at[i, 'E']
+    #Age
+        df.at[i, 'AJ'] = df.at[i, 'D']
+    #Discounted liquid wealth 
+        df.at[i, 'AK'] = df.at[i, 'AG']/df.at[i, 'AI']
+    #Discounted liquid wealth 
+        df.at[i, 'AL'] = df.at[i, 'AH']/df.at[i, 'AI']
+    #Outstanding LTV
+        df.at[i, 'AM'] = 100*df.at[i, 'AH']/df.at[i, 'F']
+
+##################################
+    #Min Deposit 
+    for i in range(len(df)):
+        df.at[i, 'AN'] = df.at[i, 'F']*minimum_initial_share*(1-LTV)
+        if (df.at[i, 'M'] - staircase_admin) > df.at[i, 'AN']:
+            df.at[i, 'AO'] = 1
+        else:
+            df.at[i, 'AO'] = 0
+    #deposit constraint adjusted
+        df['AP'] = df['AO'].cumsum()
+        df['AP'] = (df['AP'] >= 1).astype(int)
+    #potential mortgage payment 
+        df.at[i,'AQ'] = (df.at[i, 'F'] * minimum_initial_share * LTV) * mortgage_rate / (mortgage_rate if df.at[i, 'D'] == retirement_age else (1 - 1 / ((1 + mortgage_rate) ** min(mortgage_term, retirement_age- df.at[i, 'D']))))
+    #Potential rental payment 
+        df.at[i,'AR'] = df.at[i, 'F']*initial_rent_percent*(1-minimum_initial_share)
+    
+    #Affordability constraint and adjusted 
+        if (affordability_cons*df.at[i,'I']) >= ((df.at[i,'F']*service_charge) + df.at[i,'AQ'] + df.at[i, 'AR']):
+            df.at[i,'AS'] = 1
+        else:
+            df.at[i,'AS'] = 0
+        df['AT'] = (df['AS'].cumsum() >= 1).astype(int)
+    #Affordability constraint bank and adjusted 
+        if (df.at[i,'I']*(gross/income)*loan_ratio) >= minimum_initial_share*df.at[i,'F']-(df.at[i,'M']-staircase_admin):
+            df.at[i,'AU'] = 1
+        else: 
+            df.at[i,'AU'] = 0 
+        df['AV'] = (df['AU'].cumsum() >= 1).astype(int)
+    #Affordability constraint staircasing and adjusted 
+        if ((df.at[i, 'M'] + min((LTV / (1 - LTV)) * df.at[i, 'M'], df.at[i, 'I'] * loan_ratio)) / df.at[i, 'F']) >= minimum_initial_share:
+            df.at[i, 'AW'] = 1
+        else:
+            df.at[i, 'AW'] = 0
+        df['AX'] = (df['AW'].cumsum() >= 1).astype(int)
+    #Home buying decision
+        df.at[i, 'AY'] = df.at[i, 'AP']*df.at[i, 'AT']*df.at[i, 'AV']*df.at[i, 'AX']
+    #SO indicator 
+        if df.at[0, 'AY'] > 0: 
+            df.at[0, 'AZ'] = 1 
+        else: 
+            df.at[0, 'AZ'] = 0
+        for i in range(1, len(df)):
+            if df.at[i, 'AY'] > df.at[i-1, 'AY']: 
+                df.at[i, 'AZ'] = 1 
+            else: 
+                df.at[i, 'AZ'] = 0
+    #Home buying decision (non-reversible)
+        df['BA'] = (df['AZ'].cumsum() >= 1).astype(int)
+    #rent factor
+        if df.at[0, 'AZ'] == 1 and df.at[0, 'BA'] == 1:
+            df.at[0, 'BB'] = 1
+        else:
+            df.at[0, 'BB'] = 0  # This line seems redundant given your description; adjust as needed
+        for i in range(1, len(df)):
+            if df.at[i, 'AZ'] == 1 and df.at[i, 'BA'] == 1:
+                df.at[i, 'BB'] = 1
+            else:
+                df.at[i, 'BB'] = df.at[i-1, 'BB'] * (1 + rent_appreciation)
+
+        #Purchase price and adjusted 
+    for i in range(len(df)):
+        df.at[i, 'BC'] =  df.at[i, 'AZ']*df.at[i, 'F']
+        df['BD'] = (df['BC'].cumsum()).astype(int)
+        #Full rent 
+        df.at[i, 'BE'] = df.at[i, 'BD'] * df.at[i, 'BB'] * initial_rent_percent
+        #Home buying decision 
+        df.at[i, 'BF'] = df.at[i, 'BA'] 
+
+#############################################
+    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'J'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
+    df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
+    df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
+    df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
+    df.at[0, 'BH'] = min([0 + (df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 1])
+    df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else min([df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']])
+
+
+    for i in range(1, len(df)):
+        if df.at[i, 'AZ'] == 1:
+            df.at[i, 'BG'] = df.at[i, 'M']  
+        else: 
+            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BL']* mortgage_rate))
+        
+        df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
+        
+        df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
+        
+        df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
+        
+        df.at[i, 'BH'] = 1 if df.at[i-1, 'BH'] ==1 else min((df.at[i-1, 'BH']+(df.at[i, 'BG']+df.at[i, 'BL'])/df.at[i, 'F']), 1)
+        
+        if df.at[i, 'BH'] < 1:
+            df.at[i, 'BM'] = (df.at[i-1, 'BM'] + df.at[i, 'BL']*df.at[i, 'BF'])  
+        elif df.at[i, 'BH'] == 1 and df.at[i-1, 'BH'] < 1:
+            df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F']-df.at[i, 'BG']))
+        else: 
+            df.at[i, 'BM'] = df.at[i-1, 'BM']
+
+
+    for i in range(len(df)):
+        if df.at[i, 'BH'] == 1:
+            df.at[i, 'BI'] = 1 
+        else:
+            df.at[i, 'BI'] = 0
+    
+######################################
+    if df.at[0, 'BI'] > 0:
+        df.at[0, 'BN'] = 1
+    else:
+        df.at[0, 'BN'] = 0
+    for i in range(1, len(df)):
+        if df.at[i, 'BI'] > df.at[i-1, 'BI']:
+            df.at[i, 'BN'] = 1
+        else:
+            df.at[i, 'BN'] = 0
+
+    #Loan adjusted + STLT
+    for i in range(len(df)):
+        df.at[i, 'BO'] = (df.at[i, 'BM'] + df.at[i, 'P'])* df.at[i, 'BN']
+        
+        #Savings after full staircasing indicator
+        df['BP'] = df['BN'].cumsum().shift(fill_value=0).astype(int)
+        #Savings 
+        df.at[i, 'BQ'] = df.at[i, 'BP']*(df.at[i, 'I']-df.at[i, 'J'] - (service_charge*df.at[i, 'F']))
+    df.at[0, 'BR'] = df.at[0, 'BO'] - df.at[0, 'BQ']
+    for i in range(1, len(df)):
+        df.at[i, 'BR'] = (df.at[i-1, 'BR']* (1 + mortgage_rate)) + df.at[i, 'BO'] - df.at[i, 'BQ']
+    
+    #mortgage loan indicator 
+    for i in range(len(df)):
+        df.at[i, 'BS']=  df.at[i, 'BN'] +  df.at[i, 'BP']
+    #mortgage loan
+        df.at[i, 'BT'] = (1 - df.at[i, 'BS']) * df.at[i, 'BM'] + (1 if df.at[i, 'BR'] > 0 else 0) * df.at[i, 'BR']
+    #mortgage repayment
+    df.at[0, 'BU'] = 0
+     
+    for i in range(1, len(df)):
+        if df.at[i, 'BR'] <= 0 and df.at[i-1, 'BR'] > 0:
+           df.at[i, 'BU'] = 1
+        else: 
+            df.at[i, 'BU'] = 0 
+
+    #savings indicator
+    for i in range(len(df)):
+        df['BV'] = df['BU'].cumsum().shift(fill_value=0).astype(int)
+    #first savings
+        df.at[i, 'BW'] = -df.at[i, 'BU']*df.at[i, 'BR']*((1+savings_rate)/(1+mortgage_rate))
+    #savings 
+    df.at[0, 'BX'] = df.at[0, 'BU']*df.at[0, 'BW']+df.at[0, 'BV']*df.at[0, 'BQ']
+    for i in range(1, len(df)):
+        df.at[i, 'BX'] = (df.at[i-1, 'BX']*(1+savings_rate))+df.at[i, 'BU']*df.at[i, 'BW']+df.at[i, 'BV']*df.at[i, 'BQ']
+    #Liquid wealth 
+    for i in range(len(df)):
+        df.at[i, 'BY'] = df.at[i, 'M']*(1-df.at[i, 'BF']) + df.at[i, 'BX']
+    #Housing wealth 
+        df.at[i, 'BZ'] =df.at[i, 'BH']*df.at[i, 'F'] - df.at[i, 'BT']
+
+        df.at[i, 'CA'] = df.at[i, 'AI'] 
+        df.at[i, 'CB'] = df.at[i, 'D']
+        df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
+        df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']
+
+    TO_age = df.loc[df[df['W'] == 1].index[0], 'D']
+    TO_time = df.loc[df[df['W'] == 1].index[0], 'E']
+    TO_finish = df.loc[df[df['AD'] == 1].index[0], 'D']
+    TO_liquid = df.loc[df['D'] == retirement_age, 'AK'].iloc[0]
+    TO_housing = df.loc[df['D'] == retirement_age, 'AL'].iloc[0]
+    
+    SO_start_age = df.loc[df[df['AZ'] == 1].index[0], 'D']
+    SO_time = df.loc[df[df['AZ'] == 1].index[0], 'E']
+    SO_staircase_finish = df.loc[df[df['BN'] == 1].index[0], 'D']
+    SO_mortgage_finish = df.loc[df[df['BU'] == 1].index[0], 'D']
+    SO_liquid = df.loc[df['D'] == retirement_age, 'CC'].iloc[0]
+    SO_housing = df.loc[df['D'] == retirement_age, 'CD'].iloc[0]
+
+    #Graphs 
+    age_at_time_data = df['D'].to_json(orient='records')
 
     results = {
-        "affordability_status": df['Affordability Status'].iloc[-1],
-        "SOaccumulated_wealth_at_67": SOaccumulated_wealth_at_67,
-        "age_at_25_percent_SO": int(age_at_25_percent_SO),        
-        "accumulated_wealth_at_67": df[df['age_at_time'] == 67][Accumulated_wealth_column].iloc[0] if not df[df['age_at_time'] == 67].empty else 'not Applicable',
-        "x": 100 - consumption_percentage,
-        "house_price": df.at[df.index[-2], simulated_column],
-        "full_data": df.to_dict(orient="records"),
-        "age_at_SO": age_at_SO,
-        "age_at_time": age_at_time_data,
-        "accumulated_wealth": accumulated_wealth_data,
-        "latest_simulated_value": latest_simulated_column_value,
-        "shared_ownership_share": shared_ownership_share_data,
-        "transformed_wealth": transformed_wealth_data,
-        "initial_share": initial_share
+        "TO_age": TO_age,
+        "TO_time": TO_time,
+        "TO_finish": TO_finish,
+        "TO_liquid": TO_liquid,
+        "TO_housing": TO_housing, 
+
+        "SO_start_age": SO_start_age, 
+        "SO_time": SO_time,
+        "SO_staircase_finish": SO_staircase_finish,
+        "SO_mortgage_finish": SO_mortgage_finish,
+        "SO_liquid": SO_liquid,
+        "SO_housing": SO_housing,
+        "age_at_time_data": age_at_time_data
     }
     
-    return results
+    return df
+        
+        
+         
+         
+        
+
+result_df = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
+
+# Now print specific columns or the whole DataFrame
+# Adjust column names as needed; here's how to print the first few rows of the entire DataFrame  , 'BO', 'BP', 'BQ', 'BR', 'BS'    results = {}
+#print(result_df[['CA', 'CB', 'CC', 'CD']].head(20))
