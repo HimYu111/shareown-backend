@@ -396,21 +396,21 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
         df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']
 
-    TO_age = df.loc[df[df['W'] == 1].index[0], 'D']
-    TO_time = df.loc[df[df['W'] == 1].index[0], 'E']
-    TO_finish = df.loc[df[df['AD'] == 1].index[0], 'D']
-    TO_liquid = df.loc[df['D'] == retirement_age, 'AK'].iloc[0]
-    TO_housing = df.loc[df['D'] == retirement_age, 'AL'].iloc[0]
+    TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
+    TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
+    TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
+    TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
+    TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
     
-    SO_start_age = df.loc[df[df['AZ'] == 1].index[0], 'D']
-    SO_time = df.loc[df[df['AZ'] == 1].index[0], 'E']
-    SO_staircase_finish = df.loc[df[df['BN'] == 1].index[0], 'D']
-    SO_mortgage_finish = df.loc[df[df['BU'] == 1].index[0], 'D']
-    SO_liquid = df.loc[df['D'] == retirement_age, 'CC'].iloc[0]
-    SO_housing = df.loc[df['D'] == retirement_age, 'CD'].iloc[0]
+    SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
+    SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
+    SO_staircase_finish = int(df.loc[df[df['BN'] == 1].index[0], 'D'])
+    SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
+    SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
+    SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
 
     #Graphs 
-    age_at_time_data = df['D'].to_json(orient='records')
+    age_at_time_data = int(df['D'].to_json(orient='records'))
 
     results = {
         "TO_age": TO_age,
@@ -432,11 +432,3 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         
         
          
-         
-        
-
-result_df = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
-
-# Now print specific columns or the whole DataFrame
-# Adjust column names as needed; here's how to print the first few rows of the entire DataFrame  , 'BO', 'BP', 'BQ', 'BR', 'BS'    results = {}
-#print(result_df[['CA', 'CB', 'CC', 'CD']].head(20))
