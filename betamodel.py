@@ -432,10 +432,6 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         
         
          
-         
-        
-
-result_df = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
 
 # Now print specific columns or the whole DataFrame
 # Adjust column names as needed; here's how to print the first few rows of the entire DataFrame  , 'BO', 'BP', 'BQ', 'BR', 'BS'    results = {}
