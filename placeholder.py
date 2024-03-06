@@ -1,64 +1,53 @@
-        #Delta savings for staircasing 
-        if df.at[0, 'AZ'] == 1:
-            df.at[0, 'BG'] = df.at[0, 'M']
+    if df.at[0, 'BI'] > 0:
+        df.at[0, 'BN'] = 1
+    else:
+        df.at[0, 'BN'] = 0
+    for i in range(1, len(df)):
+        if df.at[i, 'BI'] > df.at[i-1, 'BI']:
+            df.at[i, 'BN'] = 1
         else:
-            df.at[i, 'BG'] = df.at[i, 'BF'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE'] * (1 - 0) - 0* mortgage_rate)
-        #Total share owned
-        df.at[0, 'BH'] = min(0+(df.at[0, 'BG']+df.at[0, 'BL'])/df.at[0, 'F'] , 1)
-        df.at[0, 'BJ'] = min(df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'] - 0,  (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG'])
-        df.at[0, 'BK'] = (LTV/(1-LTV))*(df.at[0,'BG']+ 0*df.at[0,'F'] - 0)
-        df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else 0 + min(df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']) if df.at[0, 'BH'] == 1 and 0 < 1 else 0
-
-
-
-        for i in range(1, len(df)):
-            if df.at[i, 'AZ'] == 1:
-                df.at[i, 'BG'] = df.at[i, 'M']
-            else:
-                df.at[i, 'BG'] = df.at[i, 'BF'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE'] * (1 - df.at[i-1, 'BH']) - (df.at[i-1, 'BL']* mortgage_rate))
-
-        #Total share owned
-   #     df.at[0, 'BH'] = min(0+(df.at[0, 'BG']+df.at[0, 'BL'])/df.at[0, 'F'] , 1)
-        for i in range(1, len(df)):
-            if df.at[i, 'BH'] == 1:
-                df.at[i, 'BH'] = 1
-            else:
-                df.at[i, 'BH'] = min(df.at[i-1, 'BH'] +(df.at[i, 'BG']+df.at[i, 'BL'])/df.at[i, 'F'] , 1)
-    #Full staircase
+            df.at[i, 'BN'] = 0
+    #Loan adjusted + STLT
     for i in range(len(df)):
-        if df.at[i, 'BH'] == 1:
-            df.at[i, 'BI'] = 1 
-        else:
-            df.at[i, 'BI'] = 0
+        df.at[i, 'BO'] = (df.at[i, 'BM']+df.at[i, 'P'])*df.at[i, 'BN'] 
     
-    #A Delta Loan constraint A (LTI)
-    #df.at[0, 'BJ'] = min(df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'] - 0,  (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG'])
+    #Savings after full staircasing indicator
+        df['BP'] = (df['BN'].cumsum()).astype(int)
+    #Savings 
+        df.at[i, 'BQ'] = df.at[i, 'BP']*(df.at[i, 'I']-df.at[i, 'J'] - (service_charge*df.at[i, 'F']))
+    df.at[0, 'BR'] = df.at[0, 'BO'] - df.at[0, 'BQ']
     for i in range(1, len(df)):
-        if 1 - df.at[i, 'BH'] > 0:
-            df.at[i, 'BJ'] = min((df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM']),
-            (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG'])
-        else:
-            df.at[i, 'BJ'] = df.at[0, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM']
+        df.at[i, 'BR'] = (df.at[i-1, 'BR']* (1 + mortgage_rate)) + df.at[i, 'BO'] - df.at[i, 'BQ']
     
-    #B Delta Loan constraint B (LTV)
-#    df.at[0, 'BK'] = (LTV/(1-LTV))*(df.at[0,'BG']+ 0*df.at[0,'F'] - 0)
-    for i in range(1, len(df)):
-        df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ df.at[i-1,'BH']*df.at[0,'F'] - df.at[i-1,'BM'])
+    #mortgage loan indicator 
     for i in range(len(df)):
-        df.at[i, 'BL'] = min(df.at[i, 'BJ'], df.at[i, 'BK'])
-
-    #Total loan
-#    df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else 0 + min(df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']) if df.at[0, 'BH'] == 1 and 0 < 1 else 0
+        df.at[i, 'BO']=  df.at[i, 'BN'] +  df.at[i, 'BP']
+    #mortgage loan
+        df.at[i, 'BT'] = (1 - df.at[i, 'BS']) * df.at[i, 'BM'] + (1 if df.at[i, 'BR'] > 0 else 0) * df.at[i, 'BR']
+    #mortgage repayment
+    df.at[0, 'BU'] = 0
+     
     for i in range(1, len(df)):
-        # Previous row values
-        BM_previous = df.at[i-1, 'BM']
-        BH_previous = df.at[i-1, 'BH']
-        
-        # Calculation for current row based on the formula logic
-        if df.at[i, 'BH'] < 1:
-            df.at[i, 'BM'] = BM_previous + df.at[i, 'BL'] * df.at[i, 'BF']
-        elif df.at[i, 'BH'] == 1 and BH_previous < 1:
-            df.at[i, 'BM'] = BM_previous + min(df.at[i, 'BL'], df.at[i, 'F'] - df.at[i, 'BG'])
-        else:
-            df.at[i, 'BM'] = BM_previous
-        
+        if df.at[i, 'BR'] <= 0 and df.at[i-1, 'BR'] > 0:
+           df.at[i, 'BU'] = 1
+        else: 
+            df.at[i, 'BU'] = 0 
+    #savings indicator
+    for i in range(len(df)):
+        df['BV'] = (df['BU'].cumsum() >= 1).astype(int)
+    #first savings
+        df.at[i, 'BW'] = -df.at[i, 'BU']*df.at[i, 'BR']*((1+savings_rate)/(1+mortgage_rate))
+    #savings 
+    df.at[0, 'BX'] = df.at[0, 'BU']*df.at[0, 'BW']+df.at[0, 'BV']*df.at[0, 'BQ']
+    for i in range(1, len(df)):
+        df.at[i, 'BX'] = df.at[i, 'BU']*df.at[i, 'BW']+df.at[i, 'BV']*df.at[i, 'BQ']
+    #Liquid wealth 
+    for i in range(len(df)):
+        df.at[i, 'BY'] = df.at[i, 'M']*(1-df.at[i, 'BF']) + df.at[i, 'BX']
+    #Housing wealth 
+        df.at[i, 'BZ'] =df.at[i, 'BH']*df.at[i, 'F'] - df.at[i, 'BT']
+
+        df.at[i, 'CA'] = df.at[i, 'AI'] 
+        df.at[i, 'CB'] = df.at[i, 'D']
+        df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
+        df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']

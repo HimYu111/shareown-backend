@@ -22,15 +22,15 @@ def predict():
     try:
         data = request.json
         # Extract parameters from the request data
-        houseprice = data['housePrice']
+        house_price = data['housePrice']
         FTB = data['isFirstTimeBuyer']
-        income = data['income']
+        gross = data['income']
         consumption = data['monthspending']
         age = data['headOfHouseholdAge']
         savings = data['savings']
         rent = data['currentRent']
 
-        results = betamodel.get_house_price_data(houseprice, FTB, income, consumption, age, savings, rent)
+        results = betamodel.get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
         return jsonify(results)
     except Exception as e:
         print(e)

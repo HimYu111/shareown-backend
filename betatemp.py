@@ -2,19 +2,10 @@ import os as os
 import pandas as pd
 import math as math
 
-
-initial_age = 25 #input
-num_rows = 68 - initial_age
-house_price = 220000 #home you want to buy ##################################################################################################################################
-retirement_age = 67
-
-
 inflation_adjustment = 0.5
-current_rent = 800 #input 
-annual_rent = current_rent * 12 
-savings = 10000 #input
 
 ###############
+
 savings_rate = 0.03
 inflation = 0.03
 mortgage_rate = 0.04
@@ -36,43 +27,45 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-
-############ Initial income + consumption calcs 
-basic_rate = 0.20
-higher_rate = 0.40
-additional_rate = 0.45
-basic_threshold = 37700
-higher_threshold = 125140
-gross = 47433.7  ##################################################################################################################################
-if gross <= basic_threshold:
-    tax = gross * basic_rate
-elif gross <= higher_threshold:
-    tax = basic_threshold * basic_rate + (gross - basic_threshold) * higher_rate
-else:
-    tax = basic_threshold * basic_rate + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
-
-income = gross - tax
-
-consumption_percentage = 0.60*income ####(not percentage)####################################################################################################
-non_housing_exp = consumption_percentage/income #*12 (ratio) 
-
+house_price = 220000
 FTB = 0
+gross = 47433.7
+consumption = 36000*0.6/12
+age = 25
+savings = 10000
+rent = 800
 
+def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
+    #Basic####################################################################
+    num_rows = 68 - age
+    retirement_age = 67
+    df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
 
-# Initialize DataFrame with a range for 'D'
-df = pd.DataFrame({'D': range(initial_age, 68)}, index=range(num_rows))
+    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD']
 
-# Initialize additional columns to 0
-additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD']
+    for col in additional_columns:
+        df[col] = 0  # Initialize other columns here
 
-for col in additional_columns:
-    df[col] = 0  # Initialize other columns here
+    annual_rent = rent * 12 
+    
 
-# Define the function
-def get_house_price_data(df, consumption_percentage, savings, initial_age, house_price, income, house_price_appreciation):
+    basic_rate = 0.20
+    higher_rate = 0.40
+    additional_rate = 0.45
+    basic_threshold = 37700
+    higher_threshold = 125140
+    if gross <= basic_threshold:
+        tax = gross * basic_rate
+    elif gross <= higher_threshold:
+        tax = basic_threshold * basic_rate + (gross - basic_threshold) * higher_rate
+    else:
+        tax = basic_threshold * basic_rate + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
+    income = gross - tax
+    non_housing_exp = (consumption*12)/income
+
     for i in range(len(df)):
         # Period
-        df.at[i, 'E'] = df.at[i, 'D'] - initial_age
+        df.at[i, 'E'] = df.at[i, 'D'] - age
         
     #Calculate house price appreciation for each year and set in 'F'
         df.at[i, 'F'] = house_price * ((1 + house_price_appreciation) ** df.at[i, 'E'])
@@ -309,68 +302,44 @@ def get_house_price_data(df, consumption_percentage, savings, initial_age, house
         #Home buying decision 
         df.at[i, 'BF'] = df.at[i, 'BA'] 
 
+#############################################
+    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'J'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
+    df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
+    df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
+    df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
+    df.at[0, 'BH'] = min([0 + (df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 1])
+    df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else min([df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']])
 
-        #Delta savings for staircasing 
-        if df.at[0, 'AZ'] == 1:
-            df.at[0, 'BG'] = df.at[0, 'M']
-        else:
-            df.at[i, 'BG'] = df.at[i, 'BF'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE'] * (1 - 0) - 0* mortgage_rate)
 
-        for i in range(1, len(df)):
-            if df.at[i, 'AZ'] == 1:
-                df.at[i, 'BG'] = df.at[i, 'M']
-            else:
-                df.at[i, 'BG'] = df.at[i, 'BF'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE'] * (1 - df.at[i-1, 'BH']) - (df.at[i-1, 'BL']* mortgage_rate))
+    for i in range(1, len(df)):
+        if df.at[i, 'AZ'] == 1:
+            df.at[i, 'BG'] = df.at[i, 'M']  
+        else: 
+            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BL']* mortgage_rate))
+        
+        df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
+        
+        df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
+        
+        df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
+        
+        df.at[i, 'BH'] = 1 if df.at[i-1, 'BH'] ==1 else min((df.at[i-1, 'BH']+(df.at[i, 'BG']+df.at[i, 'BL'])/df.at[i, 'F']), 1)
+        
+        if df.at[i, 'BH'] < 1:
+            df.at[i, 'BM'] = (df.at[i-1, 'BM'] + df.at[i, 'BL']*df.at[i, 'BF'])  
+        elif df.at[i, 'BH'] == 1 and df.at[i-1, 'BH'] < 1:
+            df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F']-df.at[i, 'BG']))
+        else: 
+            df.at[i, 'BM'] = df.at[i-1, 'BM']
 
-        #Total share owned
-        df.at[0, 'BH'] = min(0+(df.at[0, 'BG']+df.at[0, 'BL'])/df.at[0, 'F'] , 1)
-        for i in range(1, len(df)):
-            if df.at[i, 'BH'] == 1:
-                df.at[i, 'BH'] = 1
-            else:
-                df.at[i, 'BH'] = min(df.at[i-1, 'BH'] +(df.at[i, 'BG']+df.at[i, 'BL'])/df.at[i, 'F'] , 1)
-    #Full staircase
+
     for i in range(len(df)):
         if df.at[i, 'BH'] == 1:
             df.at[i, 'BI'] = 1 
         else:
             df.at[i, 'BI'] = 0
     
-    #A Delta Loan constraint A (LTI)
-    df.at[0, 'BJ'] = min(
-        df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'] - 0,  # BM2 is 0
-        (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG'])
-    for i in range(1, len(df)):
-        if 1 - df.at[i, 'BH'] > 0:
-            df.at[i, 'BJ'] = min((df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM']),
-            (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG'])
-        else:
-            df.at[i, 'BJ'] = df.at[0, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM']
-    
-    #B Delta Loan constraint B (LTV)
-    df.at[0, 'BK'] = (LTV/(1-LTV))*(df.at[0,'BG']+ 0*df.at[0,'F'] - 0)
-    for i in range(1, len(df)):
-        df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ df.at[i-1,'BH']*df.at[0,'F'] - df.at[i-1,'BM'])
-    for i in range(len(df)):
-        df.at[i, 'BL'] = min(df.at[i, 'BJ'], df.at[i, 'BK'])
-
-    #Total loan
-    df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else 0 + min(df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']) if df.at[0, 'BH'] == 1 and 0 < 1 else 0
-    for i in range(1, len(df)):
-        # Previous row values
-        BM_previous = df.at[i-1, 'BM']
-        BH_previous = df.at[i-1, 'BH']
-        
-        # Calculation for current row based on the formula logic
-        if df.at[i, 'BH'] < 1:
-            df.at[i, 'BM'] = BM_previous + df.at[i, 'BL'] * df.at[i, 'BF']
-        elif df.at[i, 'BH'] == 1 and BH_previous < 1:
-            df.at[i, 'BM'] = BM_previous + min(df.at[i, 'BL'], df.at[i, 'F'] - df.at[i, 'BG'])
-        else:
-            df.at[i, 'BM'] = BM_previous
-        
-##################################################################################################################################################################################################################
-    #staircasing indicator
+######################################
     if df.at[0, 'BI'] > 0:
         df.at[0, 'BN'] = 1
     else:
@@ -380,13 +349,14 @@ def get_house_price_data(df, consumption_percentage, savings, initial_age, house
             df.at[i, 'BN'] = 1
         else:
             df.at[i, 'BN'] = 0
+
     #Loan adjusted + STLT
     for i in range(len(df)):
-        df.at[i, 'BO'] = (df.at[i, 'BM']+df.at[i, 'P'])*df.at[i, 'BN'] 
-    
-    #Savings after full staircasing indicator
-        df['BP'] = (df['BN'].cumsum()).astype(int)
-    #Savings 
+        df.at[i, 'BO'] = (df.at[i, 'BM'] + df.at[i, 'P'])* df.at[i, 'BN']
+        
+        #Savings after full staircasing indicator
+        df['BP'] = df['BN'].cumsum().shift(fill_value=0).astype(int)
+        #Savings 
         df.at[i, 'BQ'] = df.at[i, 'BP']*(df.at[i, 'I']-df.at[i, 'J'] - (service_charge*df.at[i, 'F']))
     df.at[0, 'BR'] = df.at[0, 'BO'] - df.at[0, 'BQ']
     for i in range(1, len(df)):
@@ -394,7 +364,7 @@ def get_house_price_data(df, consumption_percentage, savings, initial_age, house
     
     #mortgage loan indicator 
     for i in range(len(df)):
-        df.at[i, 'BO']=  df.at[i, 'BN'] +  df.at[i, 'BP']
+        df.at[i, 'BS']=  df.at[i, 'BN'] +  df.at[i, 'BP']
     #mortgage loan
         df.at[i, 'BT'] = (1 - df.at[i, 'BS']) * df.at[i, 'BM'] + (1 if df.at[i, 'BR'] > 0 else 0) * df.at[i, 'BR']
     #mortgage repayment
@@ -405,15 +375,16 @@ def get_house_price_data(df, consumption_percentage, savings, initial_age, house
            df.at[i, 'BU'] = 1
         else: 
             df.at[i, 'BU'] = 0 
+
     #savings indicator
     for i in range(len(df)):
-        df['BV'] = (df['BU'].cumsum() >= 1).astype(int)
+        df['BV'] = df['BU'].cumsum().shift(fill_value=0).astype(int)
     #first savings
         df.at[i, 'BW'] = -df.at[i, 'BU']*df.at[i, 'BR']*((1+savings_rate)/(1+mortgage_rate))
     #savings 
     df.at[0, 'BX'] = df.at[0, 'BU']*df.at[0, 'BW']+df.at[0, 'BV']*df.at[0, 'BQ']
     for i in range(1, len(df)):
-        df.at[i, 'BX'] = df.at[i, 'BU']*df.at[i, 'BW']+df.at[i, 'BV']*df.at[i, 'BQ']
+        df.at[i, 'BX'] = (df.at[i-1, 'BX']*(1+savings_rate))+df.at[i, 'BU']*df.at[i, 'BW']+df.at[i, 'BV']*df.at[i, 'BQ']
     #Liquid wealth 
     for i in range(len(df)):
         df.at[i, 'BY'] = df.at[i, 'M']*(1-df.at[i, 'BF']) + df.at[i, 'BX']
@@ -425,11 +396,47 @@ def get_house_price_data(df, consumption_percentage, savings, initial_age, house
         df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
         df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']
 
+    TO_age = df.loc[df[df['W'] == 1].index[0], 'D']
+    TO_time = df.loc[df[df['W'] == 1].index[0], 'E']
+    TO_finish = df.loc[df[df['AD'] == 1].index[0], 'D']
+    TO_liquid = df.loc[df['D'] == retirement_age, 'AK'].iloc[0]
+    TO_housing = df.loc[df['D'] == retirement_age, 'AL'].iloc[0]
+    
+    SO_start_age = df.loc[df[df['AZ'] == 1].index[0], 'D']
+    SO_time = df.loc[df[df['AZ'] == 1].index[0], 'E']
+    SO_staircase_finish = df.loc[df[df['BN'] == 1].index[0], 'D']
+    SO_mortgage_finish = df.loc[df[df['BU'] == 1].index[0], 'D']
+    SO_liquid = df.loc[df['D'] == retirement_age, 'CC'].iloc[0]
+    SO_housing = df.loc[df['D'] == retirement_age, 'CD'].iloc[0]
 
+    #Graphs 
+    age_at_time_data = df['D'].to_json(orient='records')
 
-# Call the function with the DataFrame and parameters
-get_house_price_data(df, 0.3, savings, initial_age, house_price, income, house_price_appreciation)
+    results = {
+        "TO_age": TO_age,
+        "TO_time": TO_time,
+        "TO_finish": TO_finish,
+        "TO_liquid": TO_liquid,
+        "TO_housing": TO_housing, 
 
-# Print the first few rows for 'D', 'E', and 'F' to check
-print(df[['BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM']].head(35))
+        "SO_start_age": SO_start_age, 
+        "SO_time": SO_time,
+        "SO_staircase_finish": SO_staircase_finish,
+        "SO_mortgage_finish": SO_mortgage_finish,
+        "SO_liquid": SO_liquid,
+        "SO_housing": SO_housing,
+        "age_at_time_data": age_at_time_data
+    }
+    
+    return df
+        
+        
+         
+         
+        
 
+result_df = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
+
+# Now print specific columns or the whole DataFrame
+# Adjust column names as needed; here's how to print the first few rows of the entire DataFrame  , 'BO', 'BP', 'BQ', 'BR', 'BS'    results = {}
+#print(result_df[['CA', 'CB', 'CC', 'CD']].head(20))
