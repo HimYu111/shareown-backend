@@ -428,7 +428,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "age_at_time_data": age_at_time_data
     }
     
-    return df
+    return results
         
         
          
