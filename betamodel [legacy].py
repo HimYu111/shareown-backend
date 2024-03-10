@@ -398,10 +398,8 @@ def get_house_price_data(consumption_percentage, savings, age, income):
         "house_price": df.at[df.index[-2], simulated_column],
         "full_data": df.to_dict(orient="records"),
         "age_at_SO": age_at_SO,
-
         "age_at_time": age_at_time_data,
         "accumulated_wealth": accumulated_wealth_data,
-        
         "latest_simulated_value": latest_simulated_column_value,
         "shared_ownership_share": shared_ownership_share_data,
         "transformed_wealth": transformed_wealth_data,

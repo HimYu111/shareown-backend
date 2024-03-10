@@ -315,7 +315,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         if df.at[i, 'AZ'] == 1:
             df.at[i, 'BG'] = df.at[i, 'M']  
         else: 
-            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BL']* mortgage_rate))
+            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BM']* mortgage_rate))
         
         df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
         
@@ -396,6 +396,9 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
         df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']
 
+
+#########################
+        
     TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
     TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
@@ -410,7 +413,11 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
 
     #Graphs 
-    age_at_time_data = int(df['D'].to_json(orient='records'))
+    age_at_time_data = df['D'].to_json(orient='records')
+    staircasing_data = df['BH'].to_json(orient='records')
+    mortgage_data = df['BT'].to_json(orient='records')
+    TO_wealth_data = df['AK'].to_json(orient='records')
+    SO_wealth_data = df['CC'].to_json(orient='records')
 
     results = {
         "TO_age": TO_age,
@@ -425,9 +432,13 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "SO_mortgage_finish": SO_mortgage_finish,
         "SO_liquid": SO_liquid,
         "SO_housing": SO_housing,
-        "age_at_time_data": age_at_time_data
+
+        "age_at_time_data": age_at_time_data,
+        "staircasing_data": staircasing_data,
+        "mortgage_data": mortgage_data,
+        "TO_wealth_data": TO_wealth_data, 
+        "SO_wealth_data": SO_wealth_data
     }
-    
     return results
         
         
