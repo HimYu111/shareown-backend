@@ -41,14 +41,16 @@ def submit_email():
     try:
         data = request.json
         email = data['email']
-        # Call your method to handle email saving here
-        # result = emailmodel.save_email(email)  # Uncomment or modify according to your implementation
-        # For now, just returning a success message
-        return jsonify({'message': 'Email saved successfully'})
+        # Call save_email and check if the email was saved successfully
+        if save_email(email):
+            return jsonify({'message': 'Email saved successfully'})
+        else:
+            return jsonify({'error': 'Failed to save email'}), 500
     except Exception as e:
         print(e)
         traceback.print_exc()
-        return jsonify({'error': str(e)})
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
