@@ -8,6 +8,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 
 import betamodel
+
 from emailmodel import save_email
 
 app = Flask(__name__)

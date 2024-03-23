@@ -442,7 +442,8 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "staircasing_data": staircasing_data,
         "mortgage_data": mortgage_data,
         "TO_wealth_data": TO_wealth_data, 
-        "SO_wealth_data": SO_wealth_data
+        "SO_wealth_data": SO_wealth_data,
+        "full_data": df.to_dict(orient="records")
     }
     return results
         
