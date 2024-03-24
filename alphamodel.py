@@ -444,6 +444,10 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "TO_wealth_data": TO_wealth_data, 
         "SO_wealth_data": SO_wealth_data
     }
+    print("DF size:", df.shape)
+    print("Condition met:", not df[df['BS'] == 1].empty)
+    Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
+
     return results
         
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
@@ -464,3 +468,4 @@ print('staircasing_data:', results['staircasing_data'])
 print('mortgage_data:', results['mortgage_data'])
 print('TO_wealth_data:', results['TO_wealth_data'])
 print('SO_wealth_data:', results['SO_wealth_data'])
+
