@@ -398,7 +398,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 
 #########################
-        
+    print(house_price, FTB, gross, consumption, age, savings, rent)    
     TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
     TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
