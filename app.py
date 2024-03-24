@@ -3,6 +3,7 @@ import sys
 import traceback
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import json
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
@@ -20,6 +21,7 @@ def hello_world():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    print(json.dumps({"house_price": data['housePrice'], "FTB": data['isFirstTimeBuyer'], "gross": data['income'], "consumption": data['monthspending'], "age":data['headOfHouseholdAge'], "savings":data['savings'], "rent":data['currentRent']}, indent=4))      
     try:
         data = request.json
         results = betamodel.get_house_price_data(
