@@ -398,7 +398,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 
 #########################
-        
+    
     TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
     TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
@@ -451,21 +451,6 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     return results
         
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
+
 print('TO_age:', results['TO_age'])
-print('TO_time:', results['TO_time'])
-print('TO_finish:', results['TO_finish'])
-print('TO_liquid:', results['TO_liquid'])
-print('TO_housing:', results['TO_housing'])
-print('SO_start_age:', results['SO_start_age'])
-print('SO_time:', results['SO_time'])
-print('SO_staircase_finish:', results['SO_staircase_finish'])
-print('SO_mortgage_finish:', results['SO_mortgage_finish'])
-print('SO_liquid:', results['SO_liquid'])
-print('SO_housing:', results['SO_housing'])
-print('Mortgage_size:', results['Mortgage_size'])
-print('age_at_time_data:', results['age_at_time_data'])
-print('staircasing_data:', results['staircasing_data'])
-print('mortgage_data:', results['mortgage_data'])
-print('TO_wealth_data:', results['TO_wealth_data'])
-print('SO_wealth_data:', results['SO_wealth_data'])
 
