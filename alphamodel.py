@@ -1,6 +1,7 @@
 import os as os
 import pandas as pd
-import math as math
+import math
+import json
 
 inflation_adjustment = 0.5
 
@@ -36,6 +37,8 @@ savings = 10000
 rent = 800
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
+    print({"house_price": house_price, "FTB": FTB, "gross": gross, "consumption": consumption, "age":age, "savings":savings, "rent":rent})
+    print(json.dumps({"house_price": house_price, "FTB": FTB, "gross": gross, "consumption": consumption, "age":age, "savings":savings, "rent":rent}, indent=4))   
     #Basic####################################################################
     num_rows = 68 - age
     retirement_age = 67
