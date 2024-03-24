@@ -21,9 +21,9 @@ def hello_world():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    data = request.json
     print(json.dumps({"house_price": data['housePrice'], "FTB": data['isFirstTimeBuyer'], "gross": data['income'], "consumption": data['monthspending'], "age":data['headOfHouseholdAge'], "savings":data['savings'], "rent":data['currentRent']}, indent=4))      
     try:
-        data = request.json
         results = betamodel.get_house_price_data(
             data['housePrice'],
             data['isFirstTimeBuyer'],
