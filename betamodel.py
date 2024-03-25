@@ -37,7 +37,6 @@ affordability_cons = 0.4
 #rent = 800
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
-    print(json.dumps({"house_price": house_price, "FTB": FTB, "gross": gross, "consumption": consumption, "age":age, "savings":savings, "rent":rent}, indent=4))      
     #Basic####################################################################
     num_rows = 68 - age
     retirement_age = 67
