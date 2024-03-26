@@ -404,6 +404,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
     TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
     TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
+    TO_deposit = house_price * 0.05
     
     SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
     SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
@@ -411,6 +412,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
     SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
+    SO_deposit = house_price * 0.25*0.05
 
     #Misc
     Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
@@ -428,6 +430,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "TO_finish": TO_finish,
         "TO_liquid": TO_liquid,
         "TO_housing": TO_housing, 
+        "TO_deposit": TO_deposit,
 
         "SO_start_age": SO_start_age, 
         "SO_time": SO_time,
@@ -435,6 +438,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "SO_mortgage_finish": SO_mortgage_finish,
         "SO_liquid": SO_liquid,
         "SO_housing": SO_housing,
+        "SO_deposit": SO_deposit,
 
         "Mortgage_size": Mortgage_size,
 
