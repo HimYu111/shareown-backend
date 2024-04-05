@@ -420,13 +420,14 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
     #Misc
     Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
-    SO_share = df['BH'].iloc[0]
+    SO_share = int(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
 
     #Graphs 
+    staircasing_data = int(df['BH']*100)
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
     mortgage_data = df['BT'].to_json(orient='records')
