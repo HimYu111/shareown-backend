@@ -404,7 +404,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
     TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
     TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
-    TO_deposit = house_price * 0.05
+    TO_deposit = int(house_price * 0.05)
     
     SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
     SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
@@ -412,10 +412,10 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
     SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
-    SO_deposit = house_price * 0.25*0.05
+    SO_deposit = int(house_price * 0.25*0.05)
 
 #########################
-    TO_mortgage = int(df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term))
+    TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
     SO_mortgage = int(df['BT'].max() * (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
 
     #Misc
@@ -427,7 +427,6 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_housing = round(SO_housing / 1000) * 1000
 
     #Graphs 
-    staircasing_data = int(df['BH']*100)
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
     mortgage_data = df['BT'].to_json(orient='records')
@@ -463,6 +462,3 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "full_data": df.to_dict(orient="records")
     }
     return results
-        
-        
-         

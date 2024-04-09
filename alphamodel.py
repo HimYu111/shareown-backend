@@ -399,12 +399,12 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 
 #########################
-    
     TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
     TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
     TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
     TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
     TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
+    TO_deposit = int(house_price * 0.05)
     
     SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
     SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
@@ -412,9 +412,19 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
     SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
+    SO_deposit = int(house_price * 0.25*0.05)
+
+#########################
+    TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
+    SO_mortgage = int(df['BT'].max() * (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
 
     #Misc
     Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
+    SO_share = int(df['BH'].iloc[0])
+    SO_liquid = round(SO_liquid / 1000) * 1000
+    TO_liquid = round(TO_liquid / 1000) * 1000
+    TO_housing = round(TO_housing / 1000) * 1000
+    SO_housing = round(SO_housing / 1000) * 1000
 
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
@@ -429,6 +439,8 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "TO_finish": TO_finish,
         "TO_liquid": TO_liquid,
         "TO_housing": TO_housing, 
+        "TO_deposit": TO_deposit,
+        "TO_mortgage": TO_mortgage,
 
         "SO_start_age": SO_start_age, 
         "SO_time": SO_time,
@@ -436,6 +448,9 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "SO_mortgage_finish": SO_mortgage_finish,
         "SO_liquid": SO_liquid,
         "SO_housing": SO_housing,
+        "SO_deposit": SO_deposit,
+        "SO_mortgage": SO_mortgage,
+        "SO_share": SO_share,
 
         "Mortgage_size": Mortgage_size,
 
@@ -443,12 +458,9 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "staircasing_data": staircasing_data,
         "mortgage_data": mortgage_data,
         "TO_wealth_data": TO_wealth_data, 
-        "SO_wealth_data": SO_wealth_data
+        "SO_wealth_data": SO_wealth_data,
+        "full_data": df.to_dict(orient="records")
     }
-    print("DF size:", df.shape)
-    print("Condition met:", not df[df['BS'] == 1].empty)
-    Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
-
     return results
         
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
