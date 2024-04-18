@@ -428,8 +428,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
     TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
     TO_deposit = int(house_price * 0.05)
-    if not df[df['X'] == 1].empty:
-        TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
+    TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
 
     if not df[df['AZ'] == 1].empty:
         SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
