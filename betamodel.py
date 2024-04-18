@@ -416,7 +416,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 #########################
     TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
-    SO_mortgage = int(df['BT'].max() * (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
+    SO_mortgage = int((0.25*house_price - (0.05*house_price*0.25))*(mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)) + (0.75*0.0275*house_price) + (service_charge*house_price))
 
     #Misc
     Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
