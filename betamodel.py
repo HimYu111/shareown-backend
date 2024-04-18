@@ -400,24 +400,24 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 #########################
 # Initialize all your output variables with defaults or None
-    TO_age = None
-    TO_time = None
-    TO_finish = None
-    TO_liquid = None
-    TO_housing = None
-    TO_deposit = None
-    TO_mortgage = None
+    TO_age = 0
+    TO_time = 0
+    TO_finish = 0
+    TO_liquid = 0
+    TO_housing = 0
+    TO_deposit = 0
+    TO_mortgage = 0
 
-    SO_start_age = None
-    SO_time = None
-    SO_staircase_finish = None
-    SO_mortgage_finish = None
-    SO_liquid = None
-    SO_housing = None
-    SO_deposit = None
-    SO_mortgage = None
+    SO_start_age = 0
+    SO_time = 0
+    SO_staircase_finish = 0
+    SO_mortgage_finish = 0
+    SO_liquid = 0
+    SO_housing = 0
+    SO_deposit = 0
+    SO_mortgage = 0
 
-    Mortgage_size = None
+    Mortgage_size = 0
 
     # Check and assign values only if the filtered DataFrames are not empty
     if not df[df['W'] == 1].empty:
