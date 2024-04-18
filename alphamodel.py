@@ -28,13 +28,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 220000
+house_price = 150000
 FTB = 0
-gross = 47433.7
-consumption = 1800
+gross = 20000
+consumption = 1000
 age = 36
-savings = 100000
-rent = 800
+savings = 1500
+rent = 500
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
@@ -399,27 +399,54 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 
 #########################
-    TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
-    TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
-    TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
+    TO_age = None
+    TO_time = None
+    TO_finish = None
+    TO_liquid = None
+    TO_housing = None
+    TO_deposit = None
+    TO_mortgage = None
+
+    SO_start_age = None
+    SO_time = None
+    SO_staircase_finish = None
+    SO_mortgage_finish = None
+    SO_liquid = None
+    SO_housing = None
+    SO_deposit = None
+    SO_mortgage = None
+
+    Mortgage_size = None
+
+    # Check and assign values only if the filtered DataFrames are not empty
+    if not df[df['W'] == 1].empty:
+        TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
+        TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
+    if not df[df['AD'] == 1].empty:
+        TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
     TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
     TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
     TO_deposit = int(house_price * 0.05)
-    
-    SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
-    SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
-    SO_staircase_finish = int(df.loc[df[df['BN'] == 1].index[0], 'D'])
-    SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
+    if not df[df['X'] == 1].empty:
+        TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
+
+    if not df[df['AZ'] == 1].empty:
+        SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
+        SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
+    if not df[df['BN'] == 1].empty:
+        SO_staircase_finish = int(df.loc[df[df['BN'] == 1].index[0], 'D'])
+    if not df[df['BU'] == 1].empty:
+        SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
     SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
-    SO_deposit = int(house_price * 0.25*0.05)
+    SO_deposit = int(house_price * 0.25 * 0.05)
+    SO_mortgage = int((0.25 * house_price - (0.05 * house_price * 0.25)) * (mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
 
-#########################
-    TO_mortgage = int((df.loc[df['X'] != 0, 'X'].iloc[0])* (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
-    SO_mortgage = int(df['BT'].max() * (mortgage_rate/12)/(1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))
+# Add checks for any other DataFrame accesses where you perform similar operations
 
     #Misc
-    Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
+    if not df[df['BS'] == 1].empty:
+        Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
     SO_share = int(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
@@ -464,4 +491,5 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     return results
         
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
-print(results)
+for key, value in results.items():
+    print(f"{key}: {value}")
