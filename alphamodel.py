@@ -36,7 +36,6 @@ age = 18
 savings = 10000
 rent = 1300
 
-
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
     num_rows = 68 - age
@@ -73,7 +72,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         df.at[i, 'F'] = house_price * ((1 + house_price_appreciation) ** df.at[i, 'E'])
                     
     #income growth 
-        if 0 <= df.at[i, 'D'] <= 29:
+        if 22 <= df.at[i, 'D'] <= 29:
             growth = 0.036
         elif 30 <= df.at[i, 'D'] <= 39:
             growth = 0.027
@@ -84,7 +83,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         elif df.at[i, 'D'] >= 60:
             growth = 0.0
         else:
-            growth = None  # For ages outside the specified ranges 
+            growth = 0  # For ages outside the specified ranges 
         df.at[i, 'G'] = growth
     
     #income growth inflation adjustment
@@ -465,7 +464,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         SO_housing = 0      
 
     try:
-        SO_mortgage = int(((0.25 * house_price - (0.05 * house_price * 0.25)) * ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
+        SO_mortgage = int(((0.25 * house_price - (0.0125 * house_price )) * ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
 
@@ -477,7 +476,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     #Misc
     if not df[df['BS'] == 1].empty:
         Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
-    SO_share = int(df['BH'].iloc[0])
+    SO_share = float(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
@@ -491,7 +490,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_wealth_data = df['CC'].to_json(orient='records')
 
 
-
+    #print([df['BH']])
 
 
     results = {
@@ -523,20 +522,22 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         #"full_data": df.to_dict(orient="records")
     }
     return results
+    
+
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
 for key, value in results.items():
-    # Determine the type of the value
-    value_type = type(value).__name__
-    
-    # Print different outputs based on type
-    if isinstance(value, list) or isinstance(value, str):
-        # If the value is either a list or string and has more than 10 elements, slice it
-        if len(value) > 10:
-            display_value = f"{value[:5]} ... {value[-5:]}"
-        else:
-            display_value = value
-    else:
-        # For other types, display the value directly
-        display_value = value
-    
-    print(f"{key} (Type: {value_type}): {display_value}")
+   # Determine the type of the value
+   value_type = type(value).__name__
+   
+   # Print different outputs based on type
+   if isinstance(value, list) or isinstance(value, str):
+       # If the value is either a list or string and has more than 10 elements, slice it
+       if len(value) > 10:
+           display_value = f"{value[:5]} ... {value[-5:]}"
+       else:
+           display_value = value
+   else:
+       # For other types, display the value directly
+       display_value = value
+   
+   print(f"{key} (Type: {value_type}): {display_value}")
