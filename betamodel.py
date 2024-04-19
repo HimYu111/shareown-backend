@@ -72,7 +72,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         df.at[i, 'F'] = house_price * ((1 + house_price_appreciation) ** df.at[i, 'E'])
                     
     #income growth 
-        if 22 <= df.at[i, 'D'] <= 29:
+        if 0 <= df.at[i, 'D'] <= 29:
             growth = 0.036
         elif 30 <= df.at[i, 'D'] <= 39:
             growth = 0.027
@@ -440,14 +440,14 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
     SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
     SO_deposit = int(house_price * 0.25 * 0.05)
-    SO_mortgage = int((0.25 * house_price - (0.05 * house_price * 0.25)) * (mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
+    SO_mortgage = int(((0.25 * house_price - (0.05 * house_price * 0.25)) * ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
 
 # Add checks for any other DataFrame accesses where you perform similar operations
 
     #Misc
     if not df[df['BS'] == 1].empty:
         Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
-    SO_share = int(df['BH'].iloc[0])
+        SO_share = int(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
@@ -489,3 +489,4 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "full_data": df.to_dict(orient="records")
     }
     return results
+    
