@@ -1,6 +1,6 @@
 import os as os
 import pandas as pd
-import math as math
+import math
 import json
 
 inflation_adjustment = 0.5
@@ -28,13 +28,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-#house_price = 220000
+#house_price = 300000
 #FTB = 0
-#gross = 47433.7
-#consumption = 1800
-#age = 25
+#gross = 50000
+#consumption = 1500
+#age = 18
 #savings = 10000
-#rent = 800
+#rent = 1300
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
@@ -400,53 +400,66 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
 #########################
 # Initialize all your output variables with defaults or None
-    TO_age = 0
-    TO_time = 0
-    TO_finish = 0
-    TO_liquid = 0
-    TO_housing = 0
-    TO_deposit = 0
-    TO_mortgage = 0
-
-    SO_start_age = 0
-    SO_time = 0
-    SO_staircase_finish = 0
-    SO_mortgage_finish = 0
-    SO_liquid = 0
-    SO_housing = 0
-    SO_deposit = 0
-    SO_mortgage = 0
-
-    Mortgage_size = 0
-
     # Check and assign values only if the filtered DataFrames are not empty
-    if not df[df['W'] == 1].empty:
+    
+    try:
         TO_age = int(df.loc[df[df['W'] == 1].index[0], 'D'])
+    except (ValueError, IndexError) as e:
+        TO_age = 0 
+
+    try: 
         TO_time = int(df.loc[df[df['W'] == 1].index[0], 'E'])
-    if not df[df['AD'] == 1].empty:
+    except (ValueError, IndexError) as e:
+        TO_time = 0
+
+    try: 
         TO_finish = int(df.loc[df[df['AD'] == 1].index[0], 'D'])
-
-
-    TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
+    except (ValueError, IndexError) as e:       
+        TO_finish =0 
+      
+    try:
+        TO_liquid = int(df.loc[df['D'] == retirement_age, 'AK'].iloc[0])
+    except (ValueError, IndexError) as e:
+        TO_liquid = 0 
 
     try:
         TO_housing = int(df.loc[df['D'] == retirement_age, 'AL'].iloc[0])
     except (ValueError, IndexError) as e:
         TO_housing = 0 
 
-    TO_deposit = int(house_price * 0.05)
-    TO_mortgage = int(df.loc[df['X'] != 0, 'X'].iloc[0] * (mortgage_rate / 12) / (1 - (1 + (mortgage_rate / 12)) ** (-12 * mortgage_term)))
+##################
+    try:
+        TO_deposit = int((df.loc[df['X'] != 0, 'F'].iloc[0]) * 0.05)
+    except (ValueError, IndexError) as e:
+        TO_deposit = 0 
+    try:
+        TO_mortgage = int(df.loc[df['X'] != 0, 'X'].iloc[0] * (mortgage_rate / 12) / (1 - (1 + (mortgage_rate / 12)) ** (-12 * mortgage_term)))
+    except (ValueError, IndexError) as e:
+        TO_mortgage = 0
 
+    #print(TO_housing)
+    #print(TO_mortgage)
+
+##################
     try:
         SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
     except (ValueError, IndexError) as e:
         SO_start_age = 0 
-    SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
 
-    if not df[df['BN'] == 1].empty:
+    try:
+        SO_time = int(df.loc[df[df['AZ'] == 1].index[0], 'E'])
+    except (ValueError, IndexError) as e:
+        SO_time = 0 
+
+    try:
         SO_staircase_finish = int(df.loc[df[df['BN'] == 1].index[0], 'D'])
-    if not df[df['BU'] == 1].empty:
+    except (ValueError, IndexError) as e:
+        SO_staircase_finish = 0
+
+    try:
         SO_mortgage_finish = int(df.loc[df[df['BU'] == 1].index[0], 'D'])
+    except (ValueError, IndexError) as e:
+        SO_mortgage_finish = 0 
 
     try:
         SO_liquid = int(df.loc[df['D'] == retirement_age, 'CC'].iloc[0])
@@ -459,19 +472,20 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         SO_housing = 0      
 
     try:
-        SO_mortgage = int(((0.25 * house_price - (0.0125 * house_price )) * ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) + (0.75 * 0.0275 * house_price) + (service_charge * house_price))
+        SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
+                          ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) 
+                            + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
+    print(SO_mortgage)
 
+    try:
+        SO_deposit = int((df.loc[df['AO'] != 0, 'F'].iloc[0]) * 0.05 * 0.25)
+    except (ValueError, IndexError) as e:
+        SO_deposit = 0 
 
-    SO_deposit = int(house_price * 0.25 * 0.05)
-
-# Add checks for any other DataFrame accesses where you perform similar operations
-
-    #Misc
-    if not df[df['BS'] == 1].empty:
-        Mortgage_size = int(df.loc[df[df['BS'] == 1].index[0], 'BR'])
     SO_share = float(df['BH'].iloc[0])
+
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
@@ -483,11 +497,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     mortgage_data = df['BT'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
-    house_price = int(house_price)
-
-
-
-
+    
     results = {
         "TO_age": TO_age,
         "TO_time": TO_time,
@@ -507,15 +517,13 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "SO_mortgage": SO_mortgage,
         "SO_share": SO_share,
 
-        "Mortgage_size": Mortgage_size,
-
         "age_at_time_data": age_at_time_data,
         "staircasing_data": staircasing_data,
         "mortgage_data": mortgage_data,
         "TO_wealth_data": TO_wealth_data, 
         "SO_wealth_data": SO_wealth_data,
         "house_price": house_price,
-        #"full_data": df.to_dict(orient="records")
+        "full_data": df.to_dict(orient="records")
     }
+
     return results
-    
