@@ -28,13 +28,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 300000
+house_price = 1241241
 FTB = 0
-gross = 50000
-consumption = 1500
-age = 18
-savings = 10000
-rent = 1300
+gross = 232311
+consumption = 213
+age = 53
+savings = 23333
+rent = 1232
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
@@ -491,9 +491,12 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
 
+#['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', ,
+    print(df[['D', 'V', 'M', 'AF', 'AG', 'AK']])
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
+    print(staircasing_data)
     mortgage_data = df['BT'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
@@ -530,7 +533,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     
 
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
-print(results)
+#print(results)
 #for key, value in results.items():
 #   # Determine the type of the value
 #   value_type = type(value).__name__

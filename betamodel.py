@@ -477,6 +477,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
+        
     print(SO_mortgage)
 
     try:
@@ -485,7 +486,6 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         SO_deposit = 0 
 
     SO_share = float(df['BH'].iloc[0])
-
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
@@ -495,6 +495,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
     mortgage_data = df['BT'].to_json(orient='records')
+    mortgage_data2 = df['X'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
     
@@ -520,6 +521,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "age_at_time_data": age_at_time_data,
         "staircasing_data": staircasing_data,
         "mortgage_data": mortgage_data,
+        "mortgage_data2": mortgage_data2,
         "TO_wealth_data": TO_wealth_data, 
         "SO_wealth_data": SO_wealth_data,
         "house_price": house_price,
