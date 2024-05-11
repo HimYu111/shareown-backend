@@ -495,7 +495,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
     mortgage_data = df['BT'].to_json(orient='records')
-    mortgage_data2 = df['X'].to_json(orient='records')
+    mortgage_data2 = df['AA'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
     
