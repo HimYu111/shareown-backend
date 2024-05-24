@@ -28,13 +28,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 1241241
-FTB = 0
-gross = 232311
-consumption = 213
-age = 53
-savings = 23333
-rent = 1232
+house_price = 400000
+FTB = 1
+gross = 61780
+consumption = 1500
+age = 37
+savings = 15000
+rent = 1500
 
 def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
@@ -477,6 +477,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
+        
     print(SO_mortgage)
 
     try:
@@ -485,14 +486,14 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         SO_deposit = 0 
 
     SO_share = float(df['BH'].iloc[0])
-
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
 
-#['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', ,
-    print(df[['D', 'V', 'M', 'AF', 'AG', 'AK']])
+#[ || , , , , , , ],
+    print(df[['BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD']])
+
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
@@ -533,7 +534,6 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     
 
 results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
-#print(results)
 #for key, value in results.items():
 #   # Determine the type of the value
 #   value_type = type(value).__name__
