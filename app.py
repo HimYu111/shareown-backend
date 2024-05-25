@@ -10,7 +10,12 @@ import io
 from smtplib import SMTP
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 import smtplib
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
@@ -106,7 +111,18 @@ def submit_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
+def generate_chart_image(chart_data, title, x_label, y_label):
+    plt.figure()
+    plt.plot(chart_data)
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+    buf.close()
+    return img_base64
 
 @app.route('/submit-contact-form', methods=['POST'])
 def submit_contact_form():
@@ -129,7 +145,7 @@ def send_email():
     try:
         data = request.json
         sender_email = os.getenv('SMTP_EMAIL')  # Get environment variable
-        receiver_email = 'zcechsy@ucl.ac.uk' #"s.milcheva@ucl.ac.uk"
+        receiver_email = "s.milcheva@ucl.ac.uk"
         password = os.getenv('SMTP_PASSWORD')  # Get environment variable
 
         message = MIMEMultipart("alternative")
@@ -169,17 +185,54 @@ def get_emails():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+
+def create_email_content(result):
+    # Generate chart images
+    staircasing_data = result['staircasing_data']
+    mortgage_data = result['mortgage_data']
+    mortgage_data2 = result['mortgage_data2']
+    TO_wealth_data = result['TO_wealth_data']
+    SO_wealth_data = result['SO_wealth_data']
+
+    staircasing_img = generate_chart_image(staircasing_data, 'Staircasing', 'Age', 'Share (%)')
+    loan_img = generate_chart_image(mortgage_data, 'Outstanding Loan Balance', 'Age', 'Mortgage Debt (£)')
+    wealth_img = generate_chart_image(TO_wealth_data, 'Wealth Comparison', 'Age', 'Wealth (£)')
+
+    # Create HTML content
+    html_content = f"""
+    <html>
+    <body>
+        <h1>Your Results</h1>
+        <p>Value of home: £{result['house_price']}</p>
+        <div>
+            <h2>Full Ownership</h2>
+            <p>Minimum Deposit: £{result['TO_deposit']}</p>
+            <p>Monthly costs: £{result['TO_mortgage']}</p>
+            <p>Lifetime wealth: £{result['TO_housing']} in housing wealth, £{result['TO_liquid']} in savings</p>
+            <img src="data:image/png;base64,{loan_img}" alt="Loan Chart">
+            <img src="data:image/png;base64,{wealth_img}" alt="Wealth Chart">
+        </div>
+        <div>
+            <h2>Shared Ownership</h2>
+            <p>Minimum Deposit: £{result['SO_deposit']}</p>
+            <p>Monthly costs: £{result['SO_mortgage']}</p>
+            <p>Lifetime wealth: £{result['SO_housing']} in housing wealth, £{result['SO_liquid']} in savings</p>
+            <img src="data:image/png;base64,{staircasing_img}" alt="Staircasing Chart">
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
 @app.route('/submit-results-email', methods=['POST'])
 def submit_results_email():
     try:
         data = request.json
         email = data.get('email')
-        results = data.get('result')
-        
-        # sender_email = 'shareown8@gmail.com'  # Use your configured sender email
+        result = data.get('result')
+
         sender_email = os.getenv('SMTP_EMAIL')
-        receiver_email = email  # The user's email address
-        # password = 'paperbutterfly1'  # Your email password
+        receiver_email = email
         password = os.getenv('SMTP_PASSWORD')
 
         message = MIMEMultipart("alternative")
@@ -187,8 +240,8 @@ def submit_results_email():
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        text = f"Here are your results:\n{results}"
-        part = MIMEText(text, "plain")
+        html_content = create_email_content(result)
+        part = MIMEText(html_content, "html")
         message.attach(part)
 
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
@@ -198,6 +251,8 @@ def submit_results_email():
 
         return jsonify({'message': 'Email sent successfully'})
     except Exception as e:
+        print(e)
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
