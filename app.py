@@ -111,34 +111,6 @@ def submit_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-import matplotlib.pyplot as plt
-from io import BytesIO
-import base64
-import numpy as np
-
-
-def generate_chart_image(data_series, title, x_label, y_label, labels, colors, is_percentage=False):
-    plt.figure(figsize=(10, 5))
-    x_values = np.arange(len(data_series[0]['data']))  # Assuming all series are of the same length and x-values are uniform across them
-
-    for series, label, color in zip(data_series, labels, colors):
-        plt.plot(x_values, series['data'], marker='o', linestyle='-', color=color, label=label)
-
-    plt.title(title, fontsize=16, color='black')
-    plt.xlabel(x_label, fontsize=12, color='black')
-    plt.ylabel(y_label, fontsize=12, color='black')
-    plt.legend(loc='upper left')
-
-    if is_percentage:
-        plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
-
-    plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
-    buf = BytesIO()
-    plt.savefig(buf, format='png', dpi=300)
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-    plt.close()
-    return img_base64
 
 
 @app.route('/submit-contact-form', methods=['POST'])
@@ -204,18 +176,9 @@ def get_emails():
 
 
 def create_email_content(result):
-    # Generate chart images
-    staircasing_data = result['staircasing_data']
-    TO_mortgage_data = result['mortgage_data']
-    SO_mortgage_data = result['mortgage_data2']
-    TO_wealth_data = result['TO_wealth_data']
-    SO_wealth_data = result['SO_wealth_data']
+    to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
+    so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
 
-    staircasing_img = generate_chart_image([{'data': staircasing_data}], 'Staircasing', 'Age', 'Share (%)', ['Staircasing'], ['blue'], is_percentage=True)
-    mortgage_img = generate_chart_image([{'data': TO_mortgage_data}, {'data': SO_mortgage_data}], 'Outstanding Loan Balance', 'Age', 'Mortgage Debt (£)', ['Full Ownership', 'Shared Ownership'], ['red', 'green'])
-    wealth_img = generate_chart_image([{'data': TO_wealth_data}, {'data': SO_wealth_data}], 'Wealth Comparison', 'Age', 'Wealth (£)', ['Full Ownership', 'Shared Ownership'], ['red', 'green'])
-
-    # Create HTML content
     html_content = f"""
     <html>
     <body>
@@ -223,23 +186,23 @@ def create_email_content(result):
         <p>Value of home: £{result['house_price']}</p>
         <div>
             <h2>Full Ownership</h2>
+            <p>{to_affordability}</p>
             <p>Minimum Deposit: £{result['TO_deposit']}</p>
             <p>Monthly costs: £{result['TO_mortgage']}</p>
             <p>Lifetime wealth: £{result['TO_housing']} in housing wealth, £{result['TO_liquid']} in savings</p>
-            <img src="data:image/png;base64,{loan_img}" alt="Loan Chart">
-            <img src="data:image/png;base64,{wealth_img}" alt="Wealth Chart">
         </div>
         <div>
             <h2>Shared Ownership</h2>
+            <p>{so_affordability}</p>
             <p>Minimum Deposit: £{result['SO_deposit']}</p>
             <p>Monthly costs: £{result['SO_mortgage']}</p>
             <p>Lifetime wealth: £{result['SO_housing']} in housing wealth, £{result['SO_liquid']} in savings</p>
-            <img src="data:image/png;base64,{staircasing_img}" alt="Staircasing Chart">
         </div>
     </body>
     </html>
     """
     return html_content
+
 
 @app.route('/submit-results-email', methods=['POST'])
 def submit_results_email():
