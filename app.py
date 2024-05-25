@@ -111,18 +111,35 @@ def submit_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def generate_chart_image(chart_data, title, x_label, y_label):
-    plt.figure()
-    plt.plot(chart_data)
-    plt.title(title)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+import numpy as np
+
+
+def generate_chart_image(data_series, title, x_label, y_label, labels, colors, is_percentage=False):
+    plt.figure(figsize=(10, 5))
+    x_values = np.arange(len(data_series[0]['data']))  # Assuming all series are of the same length and x-values are uniform across them
+
+    for series, label, color in zip(data_series, labels, colors):
+        plt.plot(x_values, series['data'], marker='o', linestyle='-', color=color, label=label)
+
+    plt.title(title, fontsize=16, color='black')
+    plt.xlabel(x_label, fontsize=12, color='black')
+    plt.ylabel(y_label, fontsize=12, color='black')
+    plt.legend(loc='upper left')
+
+    if is_percentage:
+        plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x:.0f}%'))
+
+    plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
     buf = BytesIO()
-    plt.savefig(buf, format='png')
+    plt.savefig(buf, format='png', dpi=300)
     buf.seek(0)
     img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
+    plt.close()
     return img_base64
+
 
 @app.route('/submit-contact-form', methods=['POST'])
 def submit_contact_form():
@@ -189,14 +206,14 @@ def get_emails():
 def create_email_content(result):
     # Generate chart images
     staircasing_data = result['staircasing_data']
-    mortgage_data = result['mortgage_data']
-    mortgage_data2 = result['mortgage_data2']
+    TO_mortgage_data = result['mortgage_data']
+    SO_mortgage_data = result['mortgage_data2']
     TO_wealth_data = result['TO_wealth_data']
     SO_wealth_data = result['SO_wealth_data']
 
-    staircasing_img = generate_chart_image(staircasing_data, 'Staircasing', 'Age', 'Share (%)')
-    loan_img = generate_chart_image(mortgage_data, 'Outstanding Loan Balance', 'Age', 'Mortgage Debt (£)')
-    wealth_img = generate_chart_image(TO_wealth_data, 'Wealth Comparison', 'Age', 'Wealth (£)')
+    staircasing_img = generate_chart_image([{'data': staircasing_data}], 'Staircasing', 'Age', 'Share (%)', ['Staircasing'], ['blue'], is_percentage=True)
+    mortgage_img = generate_chart_image([{'data': TO_mortgage_data}, {'data': SO_mortgage_data}], 'Outstanding Loan Balance', 'Age', 'Mortgage Debt (£)', ['Full Ownership', 'Shared Ownership'], ['red', 'green'])
+    wealth_img = generate_chart_image([{'data': TO_wealth_data}, {'data': SO_wealth_data}], 'Wealth Comparison', 'Age', 'Wealth (£)', ['Full Ownership', 'Shared Ownership'], ['red', 'green'])
 
     # Create HTML content
     html_content = f"""
