@@ -53,14 +53,17 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     basic_rate = 0.20
     higher_rate = 0.40
     additional_rate = 0.45
+    allowance = 12570
     basic_threshold = 37700
     higher_threshold = 125140
-    if gross <= basic_threshold:
-        tax = gross * basic_rate
+    if gross <= allowance:
+        tax = 0 
+    elif gross <= basic_threshold:
+        tax = (gross - allowance)  * basic_rate
     elif gross <= higher_threshold:
-        tax = basic_threshold * basic_rate + (gross - basic_threshold) * higher_rate
+        tax = ((basic_threshold - allowance)  * basic_rate) + (gross - basic_threshold) * higher_rate
     else:
-        tax = basic_threshold * basic_rate + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
+        tax = ((basic_threshold- allowance)  * basic_rate) + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
     income = gross - tax
     non_housing_exp = (consumption*12)/income
 
