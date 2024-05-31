@@ -235,10 +235,25 @@ def submit_results_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/download-db')
-def download_db():
-    # Ensure security checks here to prevent unauthorized access
-    return send_from_directory(directory=os.path.dirname(__file__), filename='data.db', as_attachment=True)
+@app.route('/download-data')
+def download_data():
+    conn = sqlite3.connect('data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM user_data")
+    data = cursor.fetchall()
+
+    # Create a response object with the CSV data
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Assuming you know the column headers
+    writer.writerow(['Session ID', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Timestamp'])
+    writer.writerows(data)
+
+    output.seek(0)
+    conn.close()
+
+    return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=user_data.csv"})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
