@@ -235,6 +235,11 @@ def submit_results_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/download-db')
+def download_db():
+    # Ensure security checks here to prevent unauthorized access
+    return send_from_directory(directory=os.path.dirname(__file__), filename='data.db', as_attachment=True)
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=10000, debug=True)
 
