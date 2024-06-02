@@ -256,6 +256,6 @@ def download_data():
     return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=user_data.csv"})
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=10000, debug=True)
-
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
     
