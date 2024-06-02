@@ -470,9 +470,12 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         SO_liquid = 0      
 
     try:
-        SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
+        if income >= 90000: 
+            SO_housing = 1
+        else:
+            SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
     except (ValueError, IndexError) as e:
-        SO_housing = 0      
+        SO_housing = 0    
 
     try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
