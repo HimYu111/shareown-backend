@@ -88,6 +88,7 @@ def predict():
             data['savings'],
             data['currentRent']
         )
+        print("Prediction results:", results)
         return jsonify(results)
     except Exception as e:
         print(e)
@@ -235,7 +236,6 @@ def submit_results_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/download-data')
 def download_data():
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()

@@ -471,7 +471,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
 
     try:
         if income >= 90000: 
-            SO_housing = 1
+            SO_housing = int(1)
         else:
             SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
     except (ValueError, IndexError) as e:
@@ -531,6 +531,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
         "TO_wealth_data": TO_wealth_data, 
         "SO_wealth_data": SO_wealth_data,
         "house_price": house_price,
+        "income": gross,
         "full_data": df.to_dict(orient="records")
     }
 
