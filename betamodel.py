@@ -491,6 +491,8 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     except (ValueError, IndexError) as e:
         SO_deposit = 0 
 
+    gross = int(gross)
+
     SO_share = float(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
@@ -504,6 +506,7 @@ def get_house_price_data(house_price, FTB, gross, consumption, age, savings, ren
     mortgage_data2 = df['AA'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
+
     
     results = {
         "TO_age": TO_age,

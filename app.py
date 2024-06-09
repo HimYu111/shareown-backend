@@ -80,13 +80,16 @@ def predict():
             conn.commit()
 
         results = betamodel.get_house_price_data(
+            data['postcode'],
+            data['propertyType'],
+            data['bedrooms'],
             data['housePrice'],
             data['isFirstTimeBuyer'],
             data['income'],
             data['monthspending'],
             data['headOfHouseholdAge'],
             data['savings'],
-            data['currentRent']
+            data['currentRent'],
         )
         print("Prediction results:", results)
         return jsonify(results)
