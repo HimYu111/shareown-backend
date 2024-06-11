@@ -38,6 +38,7 @@ affordability_cons = 0.4
 
 def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
+    age = int(age)
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
