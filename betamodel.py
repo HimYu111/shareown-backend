@@ -36,7 +36,7 @@ affordability_cons = 0.4
 #savings = 10000
 #rent = 1300
 
-def get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent):
+def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
     num_rows = 68 - age
     retirement_age = 67
