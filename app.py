@@ -84,7 +84,7 @@ def predict():
             data['postcode'],
             data['propertyType'],
             data['bedrooms'],
-            data['occupation']
+            data['occupation'],
             data['housePrice'],
             data['isFirstTimeBuyer'],
             data['income'],
