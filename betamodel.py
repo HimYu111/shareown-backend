@@ -37,9 +37,13 @@ affordability_cons = 0.4
 #rent = 1300
 
 
-#postcode, propertyType, bedrooms,
-def get_house_price_data( house_price, FTB, gross, consumption, age, savings, rent):
-    #Basic####################################################################
+#
+def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent):
+    #Basic###################################################################
+    print(postcode)
+    print(propertyType)
+    print(bedrooms)
+    print(occupation)
     house_price = int(house_price)
     gross = int(gross)
     consumption = int(consumption)
