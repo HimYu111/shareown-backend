@@ -560,4 +560,17 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
         "full_data": df.to_dict(orient="records")
     }
 
+    #print("Session ID received:", sessionId, "Type:", type(sessionId))
+    #print("Postcode received:", postcode, "Type:", type(postcode))
+    #print("Property Type received:", propertyType, "Type:", type(propertyType))
+    #print("Bedrooms received:", bedrooms, "Type:", type(bedrooms))
+    #print("Occupation received:", occupation, "Type:", type(occupation))
+    print("House Price received:", house_price, "Type:", type(house_price))
+    print("Is First Time Buyer received:", FTB, "Type:", type(FTB))
+    print("Income received:", income, "Type:", type(income))
+    print("Monthly Spending received:", consumption, "Type:", type(consumption))
+    print("Head of Household Age received:", age, "Type:", type(age))
+    print("Savings received:", savings, "Type:", type(savings))
+    print("Current Rent received:", rent, "Type:", type(rent))
+
     return results

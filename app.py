@@ -32,7 +32,7 @@ def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS user_data
-                 (session_id TEXT, postcode TEXT, property_type TEXT, bedrooms TEXT,
+                 (session_id TEXT, local_authority TEXT, property_type TEXT, bedrooms TEXT,
                  occupation TEXT, house_price REAL, is_first_time_buyer INTEGER, 
                  income REAL, month_spending REAL, head_of_household_age INTEGER, 
                  savings REAL, current_rent REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
@@ -76,7 +76,7 @@ def predict():
 
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
-            c.execute("INSERT INTO user_data (session_id, postcode, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent']))
             conn.commit()
 
