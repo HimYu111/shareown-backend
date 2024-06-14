@@ -31,11 +31,9 @@ CORS(app, resources={r"*": {"origins": "*"}})
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    # Drop the existing table if it already exists
     c.execute('DROP TABLE IF EXISTS user_data')
     c.execute('DROP TABLE IF EXISTS emails')
     
-    # Recreate the table with the updated schema
     c.execute('''
         CREATE TABLE user_data (
             session_id TEXT,
