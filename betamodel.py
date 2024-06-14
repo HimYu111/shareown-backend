@@ -36,9 +36,17 @@ affordability_cons = 0.4
 #savings = 10000
 #rent = 1300
 
-def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gross, consumption, age, savings, rent):
+
+#postcode, propertyType, bedrooms,
+def get_house_price_data( house_price, FTB, gross, consumption, age, savings, rent):
     #Basic####################################################################
+    house_price = int(house_price)
+    gross = int(gross)
+    consumption = int(consumption)
     age = int(age)
+    savings = int(savings)
+    rent = int(rent)
+
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
@@ -55,7 +63,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
     higher_rate = 0.40
     additional_rate = 0.45
     allowance = 12570
-    basic_threshold = 37700
+    basic_threshold = 50270
     higher_threshold = 125140
     if gross <= allowance:
         tax = 0 
@@ -118,7 +126,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
             df.at[i, 'L'] = df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'K'] 
 
      #Total Savings 
-        df.at[0, 'M'] = df.at[0, 'L'] + savings
+        df.at[0, 'M'] = (savings)
         for i in range(1, len(df)):
             if df.at[i-1, 'M'] is not None:
                 df.at[i, 'M'] = df.at[i-1, 'M']*(1 + savings_rate) + df.at[i, 'L']
@@ -142,11 +150,13 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
 
         #Total savings net of SDLT and transaction cost = deposit
         df.at[i, 'Q'] = df.at[i, 'M']  - df.at[i, 'P'] - transaction_cost
+
         #deposit constraints
-        if df.at[i, 'Q'] >= (1 - LTV)*df.at[i, 'F']:
+        if df.at[i, 'Q'] >= ((1 - LTV)*df.at[i, 'F']) - 0.001:
             df.at[i, 'R'] = 1 
         else:
             df.at[i, 'R'] = 0 
+
         df['S'] = df['R'].cumsum()
         df['S'] = (df['S'] >= 1).astype(int)
         #income constraint
@@ -394,7 +404,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
     for i in range(len(df)):
         df.at[i, 'BY'] = df.at[i, 'M']*(1-df.at[i, 'BF']) + df.at[i, 'BX']
     #Housing wealth 
-        df.at[i, 'BZ'] =df.at[i, 'BH']*df.at[i, 'F'] - df.at[i, 'BT']
+        df.at[i, 'BZ'] = df.at[i, 'BH']*df.at[i, 'F'] - df.at[i, 'BT']
 
         df.at[i, 'CA'] = df.at[i, 'AI'] 
         df.at[i, 'CB'] = df.at[i, 'D']
@@ -493,13 +503,21 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
         SO_deposit = 0 
 
     gross = int(gross)
+    try:
+        SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])
+    except (ValueError, IndexError) as e:
+        SO_share = 0 
 
-    SO_share = float(df['BH'].iloc[0])
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
+    
+    #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
+    #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
 
+    print(df[[ 'AK', 'AL', 'CC', 'CD']])
+#'
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
@@ -507,8 +525,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
     mortgage_data2 = df['AA'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
+    TO_house_data = df['AL'].to_json(orient='records')
+    SO_house_data = df['CD'].to_json(orient='records')
 
-    
     results = {
         "TO_age": TO_age,
         "TO_time": TO_time,
@@ -534,6 +553,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, house_price, FTB, gro
         "mortgage_data2": mortgage_data2,
         "TO_wealth_data": TO_wealth_data, 
         "SO_wealth_data": SO_wealth_data,
+        "TO_house_data": TO_house_data,
+        "SO_house_data": SO_house_data,
         "house_price": house_price,
         "income": gross,
         "full_data": df.to_dict(orient="records")
