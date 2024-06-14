@@ -37,7 +37,7 @@ def create_db():
     c.execute('''
         CREATE TABLE user_data (
             session_id TEXT,
-            local_authority TEXT,  # Corrected column name
+            local_authority TEXT,  
             property_type TEXT,
             bedrooms TEXT,
             occupation TEXT,
@@ -145,8 +145,7 @@ def submit_contact_form():
         email = data.get('email')
         message = data.get('message')
 
-        # Logic to handle the data goes here
-        # For example, saving to a database or sending an email
+   
 
         return jsonify({'message': 'Contact form submitted successfully'}), 200
     except Exception as e:
@@ -157,9 +156,9 @@ def submit_contact_form():
 def send_email():
     try:
         data = request.json
-        sender_email = os.getenv('SMTP_EMAIL')  # Get environment variable
+        sender_email = os.getenv('SMTP_EMAIL')  
         receiver_email = "s.milcheva@ucl.ac.uk"
-        password = os.getenv('SMTP_PASSWORD')  # Get environment variable
+        password = os.getenv('SMTP_PASSWORD') 
 
         message = MIMEMultipart("alternative")
         message["Subject"] = "New Contact Form Submission"
@@ -265,11 +264,9 @@ def download_data():
     cursor.execute("SELECT * FROM user_data")
     data = cursor.fetchall()
 
-    # Create a response object with the CSV data
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Assuming you know the column headers
     writer.writerow(['Session ID', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Timestamp'])
     writer.writerows(data)
 
