@@ -28,6 +28,7 @@ app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
 
+
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
@@ -57,7 +58,16 @@ def create_db():
     conn.commit()
     conn.close()
 
+def delete_database():
+    try:
+        os.remove('data.db')
+        print("Database file deleted successfully.")
+    except FileNotFoundError:
+        print("Database file not found, and hence not deleted.")
+
+delete_database()
 create_db() 
+
 
 @app.route('/', methods=['GET'])
 def hello_world():
