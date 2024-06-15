@@ -36,7 +36,7 @@ savings = 0
 rent = 500
 
 postcode = 'Sunderland'
-propertyType = 'Detached'
+propertyType = 'Flat'
 bedrooms = '3+'
 occupation = 'doctor'
 
@@ -50,7 +50,6 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
         return "Excel file does not exist."
 
     try:
-        # Load the Excel file from a specific sheet
         df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
         print(df.columns)  # Debug: Print the DataFrame columns after load
     except Exception as e:

@@ -45,7 +45,6 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
         return "Excel file does not exist."
 
     try:
-        # Load the Excel file from a specific sheet
         df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
         print(df.columns)  # Debug: Print the DataFrame columns after load
     except Exception as e:
@@ -87,6 +86,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     savings = int(savings)
     rent = int(rent)
     house_price_appreciation = get_house_data(postcode, propertyType)
+    print(house_price_appreciation)
 
     num_rows = 68 - age
     retirement_age = 67
@@ -553,10 +553,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
     
-    #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
-    #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
-
-    #print(df[[ 'AK', 'AL', 'CC', 'CD']])
     print(SO_share)
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
@@ -599,18 +595,5 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "income": gross,
         "full_data": df.to_dict(orient="records")
     }
-
-    #print("Session ID received:", sessionId, "Type:", type(sessionId))
-    #print("Postcode received:", postcode, "Type:", type(postcode))
-    #print("Property Type received:", propertyType, "Type:", type(propertyType))
-    #print("Bedrooms received:", bedrooms, "Type:", type(bedrooms))
-    #print("Occupation received:", occupation, "Type:", type(occupation))
-    print("House Price received:", house_price, "Type:", type(house_price))
-    print("Is First Time Buyer received:", FTB, "Type:", type(FTB))
-    print("Income received:", income, "Type:", type(income))
-    print("Monthly Spending received:", consumption, "Type:", type(consumption))
-    print("Head of Household Age received:", age, "Type:", type(age))
-    print("Savings received:", savings, "Type:", type(savings))
-    print("Current Rent received:", rent, "Type:", type(rent))
 
     return results
