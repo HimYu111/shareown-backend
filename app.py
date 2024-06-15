@@ -50,7 +50,7 @@ def create_db():
         )
     ''')
     c.execute('''
-        CREATE TABLE emails (
+        CREATE TABLE IF NOT EXISTS emails (
             email TEXT
         )
     ''')
