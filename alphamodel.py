@@ -10,7 +10,6 @@ inflation_adjustment = 0.5
 savings_rate = 0.03
 inflation = 0.03
 mortgage_rate = 0.04
-house_price_appreciation = 0.05
 house_maintainance_cost = 0.01
 mortgage_term = 30
 transaction_cost = 0
@@ -36,8 +35,64 @@ age = 23
 savings = 0
 rent = 500
 
-def get_house_price_data( house_price, FTB, gross, consumption, age, savings, rent):
-    #Basic####################################################################
+postcode = 'Sunderland'
+propertyType = 'Detached'
+bedrooms = '3+'
+occupation = 'doctor'
+
+
+def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    excel_path = os.path.join(script_dir, 'Appreciation Rates 1996 to 2023.xlsx')
+
+    if not os.path.exists(excel_path):
+        print("Excel file does not exist.")
+        return "Excel file does not exist."
+
+    try:
+        # Load the Excel file from a specific sheet
+        df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
+        print(df.columns)  # Debug: Print the DataFrame columns after load
+    except Exception as e:
+        return f"Failed to load Excel file: {e}"
+
+    propertyType = propertyType.lower()
+    propertyType_to_column = {
+        'detached': 'Detached',
+        'semi-detached': 'Semi-Detached',
+        'terraced': 'Terraced',
+        'flat': 'Flats',
+        'undecided': 'Undecided'
+    }
+
+    if propertyType not in propertyType_to_column:
+        return "Invalid house type specified"
+    column_name = propertyType_to_column[propertyType]
+
+    try:
+        # Ensure case-insensitive matching for local authorities
+        df['Local authority name'] = df['Local authority name'].astype(str).str.lower()
+        # Try to get the house price appreciation value
+        house_price_appreciation = df[df['Local authority name'] == postcode.lower()][column_name].values[0]
+        return house_price_appreciation
+    except IndexError:
+        return "Local authority name not found or no data in the specified column"
+
+#
+def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent):
+    #Basic###################################################################
+    print(postcode)
+    print(propertyType)
+    print(bedrooms)
+    print(occupation)
+    house_price = int(house_price)
+    gross = int(gross)
+    consumption = int(consumption)
+    age = int(age)
+    savings = int(savings)
+    rent = int(rent)
+    house_price_appreciation = get_house_data(postcode, propertyType)
+    print(house_price_appreciation)
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
@@ -48,7 +103,6 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
         df[col] = 0  # Initialize other columns here
 
     annual_rent = rent * 12 
-    
 
     basic_rate = 0.20
     higher_rate = 0.40
@@ -66,6 +120,8 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
         tax = ((basic_threshold- allowance)  * basic_rate) + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
     income = gross - tax
     non_housing_exp = (consumption*12)/income
+
+    ####################################################################################
 
     for i in range(len(df)):
         # Period
@@ -508,7 +564,7 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
     #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
     #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
 
-    print(df[[ 'BH']])
+    #print(df[[ 'BH']])
     print(SO_share)
 #'
     #Graphs 
@@ -558,20 +614,4 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
     return results
     
 
-results = get_house_price_data(house_price, FTB, gross, consumption, age, savings, rent)
-#for key, value in results.items():
-#   # Determine the type of the value
-#   value_type = type(value).__name__
-#   
-#   # Print different outputs based on type
-#   if isinstance(value, list) or isinstance(value, str):
-#       # If the value is either a list or string and has more than 10 elements, slice it
-#       if len(value) > 10:
-#           display_value = f"{value[:5]} ... {value[-5:]}"
-#       else:
-#           display_value = value
-#   else:
-#       # For other types, display the value directly
-#       display_value = value
-#   
-#   print(f"{key} (Type: {value_type}): {display_value}")
+results = get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent)

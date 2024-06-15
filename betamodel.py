@@ -10,7 +10,7 @@ inflation_adjustment = 0.5
 savings_rate = 0.03
 inflation = 0.03
 mortgage_rate = 0.04
-house_price_appreciation = 0.05
+#house_price_appreciation = 0.05
 house_maintainance_cost = 0.01
 mortgage_term = 30
 transaction_cost = 0
@@ -36,6 +36,42 @@ affordability_cons = 0.4
 #savings = 10000
 #rent = 1300
 
+def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    excel_path = os.path.join(script_dir, 'Appreciation Rates 1996 to 2023.xlsx')
+
+    if not os.path.exists(excel_path):
+        print("Excel file does not exist.")
+        return "Excel file does not exist."
+
+    try:
+        # Load the Excel file from a specific sheet
+        df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
+        print(df.columns)  # Debug: Print the DataFrame columns after load
+    except Exception as e:
+        return f"Failed to load Excel file: {e}"
+
+    propertyType = propertyType.lower()
+    propertyType_to_column = {
+        'detached': 'Detached',
+        'semi-detached': 'Semi-Detached',
+        'terraced': 'Terraced',
+        'flat': 'Flats',
+        'undecided': 'Undecided'
+    }
+
+    if propertyType not in propertyType_to_column:
+        return "Invalid house type specified"
+    column_name = propertyType_to_column[propertyType]
+
+    try:
+        # Ensure case-insensitive matching for local authorities
+        df['Local authority name'] = df['Local authority name'].astype(str).str.lower()
+        # Try to get the house price appreciation value
+        house_price_appreciation = df[df['Local authority name'] == postcode.lower()][column_name].values[0]
+        return house_price_appreciation
+    except IndexError:
+        return "Local authority name not found or no data in the specified column"
 
 #
 def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent):
@@ -50,6 +86,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     age = int(age)
     savings = int(savings)
     rent = int(rent)
+    house_price_appreciation = get_house_data(postcode, propertyType)
 
     num_rows = 68 - age
     retirement_age = 67
@@ -62,7 +99,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     annual_rent = rent * 12 
     
-
     basic_rate = 0.20
     higher_rate = 0.40
     additional_rate = 0.45
