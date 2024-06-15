@@ -33,7 +33,7 @@ def create_db():
     c = conn.cursor()
     
     c.execute('''
-        CREATE TABLE user_data (
+        CREATE TABLE IF NOT EXISTS user_data (
             session_id TEXT,
             local_authority TEXT,  
             property_type TEXT,
