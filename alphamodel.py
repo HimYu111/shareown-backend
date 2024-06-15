@@ -30,7 +30,7 @@ affordability_cons = 0.4
 
 house_price = 200000
 FTB = 0
-gross = 33000
+gross = 25000
 consumption = 1000
 age = 23
 savings = 0
@@ -495,7 +495,11 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
 
     gross = int(gross)
 
-    SO_share = float(df['BH'].iloc[0])
+    try:
+        SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])*100
+    except (ValueError, IndexError) as e:
+        SO_share = 0 
+
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
     TO_housing = round(TO_housing / 1000) * 1000
@@ -504,7 +508,8 @@ def get_house_price_data( house_price, FTB, gross, consumption, age, savings, re
     #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
     #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
 
-    print(df[[ 'AK', 'AL', 'CC', 'CD']])
+    print(df[[ 'BH']])
+    print(SO_share)
 #'
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
