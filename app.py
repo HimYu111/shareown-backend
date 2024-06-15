@@ -31,8 +31,6 @@ CORS(app, resources={r"*": {"origins": "*"}})
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    c.execute('DROP TABLE IF EXISTS user_data')
-    c.execute('DROP TABLE IF EXISTS emails')
     
     c.execute('''
         CREATE TABLE user_data (

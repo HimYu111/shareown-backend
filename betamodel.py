@@ -508,7 +508,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     gross = int(gross)
     try:
-        SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])
+        SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])*100
     except (ValueError, IndexError) as e:
         SO_share = 0 
 
@@ -520,8 +520,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
     #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
 
-    print(df[[ 'AK', 'AL', 'CC', 'CD']])
-#'
+    #print(df[[ 'AK', 'AL', 'CC', 'CD']])
+    print(SO_share)
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
