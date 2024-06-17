@@ -86,6 +86,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     savings = int(savings)
     rent = int(rent)
     house_price_appreciation = get_house_data(postcode, propertyType)
+    house_price_appreciation = float(house_price_appreciation)
     print(house_price_appreciation)
 
     num_rows = 68 - age
