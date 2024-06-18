@@ -567,6 +567,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     net_wealth_cd_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
     net_wealth_ak_sums = {key: 0 for key in age_ranges}  # For 'AK' column sums
+    net_wealth_cc_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
+    net_wealth_al_sums = {key: 0 for key in age_ranges}
 
     # Calculate sums for each row in the DataFrame
     for i in range(len(df)):
@@ -575,12 +577,15 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
             if age_value in age_range:
                 net_wealth_cd_sums[age_range_key] += df.at[i, 'CD']
                 net_wealth_ak_sums[age_range_key] += df.at[i, 'AK']
+                net_wealth_cc_sums[age_range_key] += df.at[i, 'CC']
+                net_wealth_al_sums[age_range_key] += df.at[i, 'AL']
                 break
 
     # Convert the net wealth sums dictionaries to lists (optional)
     net_wealth_cd_list = json.dumps([net_wealth_cd_sums[age_range] for age_range in age_ranges])
     net_wealth_ak_list = json.dumps([net_wealth_ak_sums[age_range] for age_range in age_ranges])
-
+    net_wealth_cc_list = json.dumps([net_wealth_cc_sums[age_range] for age_range in age_ranges])
+    net_wealth_al_list = json.dumps([net_wealth_al_sums[age_range] for age_range in age_ranges])
 
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
@@ -626,6 +631,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "age_ranges": age_ranges,
         "net_wealth_cd_by_age_range": net_wealth_cd_list,
         "net_wealth_ak_by_age_range": net_wealth_ak_list,
+        "net_wealth_cc_by_age_range": net_wealth_cc_list,
+        "net_wealth_al_by_age_range": net_wealth_al_list,
     }
 
     return results
