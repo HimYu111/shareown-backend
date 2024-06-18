@@ -578,8 +578,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
                 break
 
     # Convert the net wealth sums dictionaries to lists (optional)
-    net_wealth_cd_list = [net_wealth_cd_sums[age_range] for age_range in age_ranges]
-    net_wealth_ak_list = [net_wealth_ak_sums[age_range] for age_range in age_ranges]
+    net_wealth_cd_list = json.dumps([net_wealth_cd_sums[age_range] for age_range in age_ranges])
+    net_wealth_ak_list = json.dumps([net_wealth_ak_sums[age_range] for age_range in age_ranges])
 
 
     #Graphs 
