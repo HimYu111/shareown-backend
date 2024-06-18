@@ -555,6 +555,33 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     SO_housing = round(SO_housing / 1000) * 1000
     
     print(SO_share)
+
+    age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
+    age_ranges_dict = {
+        "18-29": range(18, 30),
+        "30-39": range(30, 40),
+        "40-49": range(40, 50),
+        "50-59": range(50, 60),
+        "60-69": range(60, 70)
+    }
+
+    net_wealth_cd_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
+    net_wealth_ak_sums = {key: 0 for key in age_ranges}  # For 'AK' column sums
+
+    # Calculate sums for each row in the DataFrame
+    for i in range(len(df)):
+        age_value = df.at[i, 'D']
+        for age_range_key, age_range in age_ranges_dict.items():
+            if age_value in age_range:
+                net_wealth_cd_sums[age_range_key] += df.at[i, 'CD']
+                net_wealth_ak_sums[age_range_key] += df.at[i, 'AK']
+                break
+
+    # Convert the net wealth sums dictionaries to lists (optional)
+    net_wealth_cd_list = [net_wealth_cd_sums[age_range] for age_range in age_ranges]
+    net_wealth_ak_list = [net_wealth_ak_sums[age_range] for age_range in age_ranges]
+
+
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
@@ -594,7 +621,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_house_data": SO_house_data,
         "house_price": house_price,
         "income": gross,
-        "full_data": df.to_dict(orient="records")
+        "full_data": df.to_dict(orient="records"),
+
+        "age_ranges": age_ranges,
+        "net_wealth_cd_by_age_range": net_wealth_cd_list,
+        "net_wealth_ak_by_age_range": net_wealth_ak_list,
     }
 
     return results
