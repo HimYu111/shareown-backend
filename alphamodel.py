@@ -40,7 +40,6 @@ propertyType = 'Flat'
 bedrooms = '3+'
 occupation = 'doctor'
 
-
 def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     excel_path = os.path.join(script_dir, 'Appreciation Rates 1996 to 2023.xlsx')
@@ -77,7 +76,6 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
     except IndexError:
         return "Local authority name not found or no data in the specified column"
 
-#
 def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent):
     #Basic###################################################################
     print(postcode)
@@ -91,7 +89,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     savings = int(savings)
     rent = int(rent)
     house_price_appreciation = get_house_data(postcode, propertyType)
+    house_price_appreciation = float(house_price_appreciation)
     print(house_price_appreciation)
+
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
@@ -102,12 +102,12 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df[col] = 0  # Initialize other columns here
 
     annual_rent = rent * 12 
-
+    
     basic_rate = 0.20
     higher_rate = 0.40
     additional_rate = 0.45
     allowance = 12570
-    basic_threshold = 37700
+    basic_threshold = 50270
     higher_threshold = 125140
     if gross <= allowance:
         tax = 0 
@@ -119,8 +119,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         tax = ((basic_threshold- allowance)  * basic_rate) + (higher_threshold - basic_threshold) * higher_rate + (gross - higher_threshold) * additional_rate
     income = gross - tax
     non_housing_exp = (consumption*12)/income
-
-    ####################################################################################
 
     for i in range(len(df)):
         # Period
@@ -549,7 +547,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_deposit = 0 
 
     gross = int(gross)
-
     try:
         SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])*100
     except (ValueError, IndexError) as e:
@@ -560,12 +557,42 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
     
-    #, , 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD'
-    #print(df[['F', 'M', 'Q', 'X', 'Y', 'Z']])
-
-    #print(df[[ 'BH']])
     print(SO_share)
-#'
+
+    age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
+    age_ranges_dict = {
+        "18-29": range(18, 30),
+        "30-39": range(30, 40),
+        "40-49": range(40, 50),
+        "50-59": range(50, 60),
+        "60-69": range(60, 70)
+    }
+
+    net_wealth_cd_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
+    net_wealth_ak_sums = {key: 0 for key in age_ranges}  # For 'AK' column sums
+    net_wealth_cc_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
+    net_wealth_al_sums = {key: 0 for key in age_ranges}
+
+    # Calculate sums for each row in the DataFrame
+    for i in range(len(df)):
+        age_value = df.at[i, 'D']
+        for age_range_key, age_range in age_ranges_dict.items():
+            if age_value in age_range:
+                net_wealth_cd_sums[age_range_key] += df.at[i, 'CD']
+                net_wealth_ak_sums[age_range_key] += df.at[i, 'AK']
+                net_wealth_cc_sums[age_range_key] += df.at[i, 'CC']
+                net_wealth_al_sums[age_range_key] += df.at[i, 'AL']
+                break
+
+    # Convert the net wealth sums dictionaries to lists (optional)
+    net_wealth_cd_list = json.dumps([net_wealth_cd_sums[age_range] for age_range in age_ranges])
+    net_wealth_ak_list = json.dumps([net_wealth_ak_sums[age_range] for age_range in age_ranges])
+    net_wealth_cc_list = json.dumps([net_wealth_cc_sums[age_range] for age_range in age_ranges])
+    net_wealth_al_list = json.dumps([net_wealth_al_sums[age_range] for age_range in age_ranges])
+
+    print(age_ranges)
+    print(net_wealth_ak_list)
+
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
@@ -576,8 +603,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     TO_house_data = df['AL'].to_json(orient='records')
     SO_house_data = df['CD'].to_json(orient='records')
 
-
-    
     results = {
         "TO_age": TO_age,
         "TO_time": TO_time,
@@ -607,8 +632,15 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_house_data": SO_house_data,
         "house_price": house_price,
         "income": gross,
-        "full_data": df.to_dict(orient="records")
+        "full_data": df.to_dict(orient="records"),
+
+        "age_ranges": age_ranges,
+        "net_wealth_cd_by_age_range": net_wealth_cd_list,
+        "net_wealth_ak_by_age_range": net_wealth_ak_list,
+        "net_wealth_cc_by_age_range": net_wealth_cc_list,
+        "net_wealth_al_by_age_range": net_wealth_al_list,
     }
+
 
     return results
     
