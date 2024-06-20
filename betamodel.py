@@ -603,8 +603,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
             break
 
     # Create new lists for 'D' and 'BH'
-    age_stairgraph = float(df['D'].iloc[:max_index + 1].tolist())
-    share_stairgraph = float(df['BH'].iloc[:max_index + 1].tolist())
+    age_stairgraph = df['D'].iloc[:max_index + 1].tolist()
+    share_stairgraph = df['BH'].iloc[:max_index + 1].tolist()
 
     # Convert to JSON-exportable formats (floats for BH values)
     age_stairgraph = json.dumps(age_stairgraph)
