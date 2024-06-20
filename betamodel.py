@@ -593,6 +593,23 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_cc_list = json.dumps(net_wealth_cc_list)
     net_wealth_al_list = json.dumps(net_wealth_al_list)
 
+    cumulative_sum = 0
+    max_index = 0
+
+    for i in range(len(df)):
+        cumulative_sum += df.at[i, 'BH']
+        if cumulative_sum >= 1:
+            max_index = i
+            break
+
+    # Create new lists for 'D' and 'BH'
+    age_stairgraph = float(df['D'].iloc[:max_index + 1].tolist())
+    share_stairgraph = float(df['BH'].iloc[:max_index + 1].tolist())
+
+    # Convert to JSON-exportable formats (floats for BH values)
+    age_stairgraph = json.dumps(age_stairgraph)
+    share_stairgraph = json.dumps([float(BH) for BH in share_stairgraph])
+
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
@@ -639,6 +656,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "net_wealth_ak_by_age_range": net_wealth_ak_list,
         "net_wealth_cc_by_age_range": net_wealth_cc_list,
         "net_wealth_al_by_age_range": net_wealth_al_list,
+
+        "age_stairgraph": age_stairgraph,
+        "share_stairgraph": share_stairgraph,
     }
 
     return results
