@@ -55,7 +55,7 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
         'detached': 'Detached',
         'semi-detached': 'Semi-Detached',
         'terraced': 'Terraced',
-        'flats': 'Flats',
+        'apartment': 'Apartment',
         'undecided': 'Undecided'
     }
 
