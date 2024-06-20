@@ -598,9 +598,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         max_index = 0
 
         for i in range(len(df)):
-            cumulative_sum += df.at[i, 'BH']
+            cumulative_sum += float(df.at[i, 'BH'])
             if cumulative_sum >= 1:
-                max_index = i + 1  
+                max_index = i + 2  
                 break
 
         return max_index
