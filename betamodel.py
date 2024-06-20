@@ -575,17 +575,17 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         age_value = df.at[i, 'D']
         for age_range_key, age_range in age_ranges_dict.items():
             if age_value in age_range:
-                net_wealth_cd_sums[age_range_key] += df.at[i, 'CD']
-                net_wealth_ak_sums[age_range_key] += df.at[i, 'AK']
-                net_wealth_cc_sums[age_range_key] += df.at[i, 'CC']
-                net_wealth_al_sums[age_range_key] += df.at[i, 'AL']
+                net_wealth_cd_sums[age_range_key] += float(df.at[i, 'CD'])
+                net_wealth_ak_sums[age_range_key] += float(df.at[i, 'AK'])
+                net_wealth_cc_sums[age_range_key] += float(df.at[i, 'CC'])
+                net_wealth_al_sums[age_range_key] += float(df.at[i, 'AL'])
                 break
 
     # Convert the net wealth sums dictionaries to lists (optional)
-    net_wealth_cd_list = [net_wealth_cd_sums[age_range] for age_range in age_ranges]
-    net_wealth_ak_list = [net_wealth_ak_sums[age_range] for age_range in age_ranges]
-    net_wealth_cc_list = [net_wealth_cc_sums[age_range] for age_range in age_ranges]
-    net_wealth_al_list = [net_wealth_al_sums[age_range] for age_range in age_ranges]
+    net_wealth_cd_list = [float(net_wealth_cd_sums[age_range]) for age_range in age_ranges]
+    net_wealth_ak_list = [float(net_wealth_ak_sums[age_range]) for age_range in age_ranges]
+    net_wealth_cc_list = [float(net_wealth_cc_sums[age_range]) for age_range in age_ranges]
+    net_wealth_al_list = [float(net_wealth_al_sums[age_range]) for age_range in age_ranges]
     
     age_ranges = json.dumps(age_ranges)
     net_wealth_cd_list = json.dumps(net_wealth_cd_list)
