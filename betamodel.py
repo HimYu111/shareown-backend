@@ -593,18 +593,22 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_cc_list = json.dumps(net_wealth_cc_list)
     net_wealth_al_list = json.dumps(net_wealth_al_list)
 
-    cumulative_sum = 0
-    max_index = 0
+    def find_max_index(df):
+        cumulative_sum = 0
+        max_index = 0
 
-    for i in range(len(df)):
-        cumulative_sum += df.at[i, 'BH']
-        if cumulative_sum >= 1:
-            max_index = i + 1 
-            break
+        for i in range(len(df)):
+            cumulative_sum += df.at[i, 'BH']
+            if cumulative_sum >= 1:
+                max_index = i + 1  
+                break
 
-    # Create new lists for 'D' and 'BH'
-    age_stairgraph = df['D'].iloc[:max_index + 1].tolist()
-    share_stairgraph = df['BH'].iloc[:max_index + 1].tolist()
+        return max_index
+
+    max_index = find_max_index(df)
+    age_stairgraph = df['D'].iloc[:max_index].tolist()
+    share_stairgraph = df['BH'].iloc[:max_index].tolist()
+    print(share_stairgraph)
 
     # Convert to JSON-exportable formats (floats for BH values)
     age_stairgraph = json.dumps(age_stairgraph)
