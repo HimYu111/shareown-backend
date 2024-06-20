@@ -599,7 +599,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     for i in range(len(df)):
         cumulative_sum += df.at[i, 'BH']
         if cumulative_sum >= 1:
-            max_index = i
+            max_index = i + 1 
             break
 
     # Create new lists for 'D' and 'BH'
