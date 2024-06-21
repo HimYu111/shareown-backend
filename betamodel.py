@@ -587,6 +587,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_cc_list = [float(net_wealth_cc_sums[age_range]) for age_range in age_ranges]
     net_wealth_al_list = [float(net_wealth_al_sums[age_range]) for age_range in age_ranges]
 
+    print(age_ranges)
     print(net_wealth_cd_list)
     print(net_wealth_ak_list)
     print(net_wealth_cc_list)
