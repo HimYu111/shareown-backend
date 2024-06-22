@@ -558,35 +558,36 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
     age_ranges_dict = {
-        "18-29": range(18, 30),
-        "30-39": range(30, 40),
-        "40-49": range(40, 50),
-        "50-59": range(50, 60),
-        "60-69": range(60, 70)
+        "18-29": 29,
+        "30-39": 39,
+        "40-49": 49,
+        "50-59": 59,
+        "60-69": 69
     }
 
-    net_wealth_cd_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
-    net_wealth_ak_sums = {key: 0 for key in age_ranges}  # For 'AK' column sums
-    net_wealth_cc_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
-    net_wealth_al_sums = {key: 0 for key in age_ranges}
+    # Initialize dictionaries to store the values at the last age of each range
+    net_wealth_cd_values = {key: 0 for key in age_ranges}
+    net_wealth_ak_values = {key: 0 for key in age_ranges}
+    net_wealth_cc_values = {key: 0 for key in age_ranges}
+    net_wealth_al_values = {key: 0 for key in age_ranges}
 
-    # Calculate sums for each row in the DataFrame
+    # Iterate over the DataFrame and update the values when the age matches the end of the range
     for i in range(len(df)):
         age_value = df.at[i, 'D']
-        for age_range_key, age_range in age_ranges_dict.items():
-            if age_value in age_range:
-                net_wealth_cd_sums[age_range_key] += float(df.at[i, 'CD'])
-                net_wealth_ak_sums[age_range_key] += float(df.at[i, 'AK'])
-                net_wealth_cc_sums[age_range_key] += float(df.at[i, 'CC'])
-                net_wealth_al_sums[age_range_key] += float(df.at[i, 'AL'])
+        for age_range_key, last_age in age_ranges_dict.items():
+            if age_value == last_age:
+                net_wealth_cd_values[age_range_key] = float(df.at[i, 'CD'])
+                net_wealth_ak_values[age_range_key] = float(df.at[i, 'AK'])
+                net_wealth_cc_values[age_range_key] = float(df.at[i, 'CC'])
+                net_wealth_al_values[age_range_key] = float(df.at[i, 'AL'])
                 break
 
-    # Convert the net wealth sums dictionaries to lists (optional)
-    net_wealth_cd_list = [float(net_wealth_cd_sums[age_range]) for age_range in age_ranges]
-    net_wealth_ak_list = [float(net_wealth_ak_sums[age_range]) for age_range in age_ranges]
-    net_wealth_cc_list = [float(net_wealth_cc_sums[age_range]) for age_range in age_ranges]
-    net_wealth_al_list = [float(net_wealth_al_sums[age_range]) for age_range in age_ranges]
-
+    # Convert the net wealth values dictionaries to lists (optional)
+    net_wealth_cd_list = [net_wealth_cd_values[age_range] for age_range in age_ranges]
+    net_wealth_ak_list = [net_wealth_ak_values[age_range] for age_range in age_ranges]
+    net_wealth_cc_list = [net_wealth_cc_values[age_range] for age_range in age_ranges]
+    net_wealth_al_list = [net_wealth_al_values[age_range] for age_range in age_ranges]
+    
     print(age_ranges)
     print(net_wealth_cd_list)
     print(net_wealth_ak_list)
