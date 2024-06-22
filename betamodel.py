@@ -562,7 +562,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "30-39": 39,
         "40-49": 49,
         "50-59": 59,
-        "60-69": 69
+        "60-69": 67
     }
 
     # Initialize dictionaries to store the values at the last age of each range
