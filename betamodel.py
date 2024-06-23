@@ -556,7 +556,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     
     print(SO_share)
 
-    age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
+    age_ranges = ["20", "30", "40", "50", "60", "67"]
     age_ranges_dict = {
         "20": 20,
         "30": 30,
