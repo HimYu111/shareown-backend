@@ -558,11 +558,12 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
     age_ranges_dict = {
-        "18-29": 29,
-        "30-39": 39,
-        "40-49": 49,
-        "50-59": 59,
-        "60-69": 67
+        "20": 20,
+        "30": 30,
+        "40": 40,
+        "50": 50,
+        "60": 60,
+        "67": 67
     }
 
     # Initialize dictionaries to store the values at the last age of each range
