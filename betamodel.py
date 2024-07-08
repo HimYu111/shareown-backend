@@ -571,6 +571,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_ak_values = {key: 0 for key in age_ranges}
     net_wealth_cc_values = {key: 0 for key in age_ranges}
     net_wealth_al_values = {key: 0 for key in age_ranges}
+    net_wealth_bt_values = {key: 0 for key in age_ranges}
+    net_wealth_aa_values = {key: 0 for key in age_ranges}
 
     # Iterate over the DataFrame and update the values when the age matches the end of the range
     for i in range(len(df)):
@@ -581,6 +583,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
                 net_wealth_ak_values[age_range_key] = float(df.at[i, 'AK'])
                 net_wealth_cc_values[age_range_key] = float(df.at[i, 'CC'])
                 net_wealth_al_values[age_range_key] = float(df.at[i, 'AL'])
+                net_wealth_bt_values[age_range_key] = float(df.at[i, 'BT'])
+                net_wealth_aa_values[age_range_key] = float(df.at[i, 'AA'])
                 break
 
     # Convert the net wealth values dictionaries to lists (optional)
@@ -588,18 +592,24 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_ak_list = [net_wealth_ak_values[age_range] for age_range in age_ranges]
     net_wealth_cc_list = [net_wealth_cc_values[age_range] for age_range in age_ranges]
     net_wealth_al_list = [net_wealth_al_values[age_range] for age_range in age_ranges]
+    net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
+    net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
     print(age_ranges)
     print(net_wealth_cd_list)
     print(net_wealth_ak_list)
     print(net_wealth_cc_list)
     print(net_wealth_al_list)
+    print(net_wealth_bt_list)
+    print(net_wealth_aa_list)
     
     age_ranges = json.dumps(age_ranges)
     net_wealth_cd_list = json.dumps(net_wealth_cd_list)
     net_wealth_ak_list = json.dumps(net_wealth_ak_list)
     net_wealth_cc_list = json.dumps(net_wealth_cc_list)
     net_wealth_al_list = json.dumps(net_wealth_al_list)
+    net_wealth_bt_list = json.dumps(net_wealth_bt_list)
+    net_wealth_aa_list = json.dumps(net_wealth_aa_list)
 
     def find_max_index(df):
         cumulative_sum = 0
@@ -667,7 +677,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "net_wealth_ak_by_age_range": net_wealth_ak_list,
         "net_wealth_cc_by_age_range": net_wealth_cc_list,
         "net_wealth_al_by_age_range": net_wealth_al_list,
-
+        "net_wealth_bt_by_age_range": net_wealth_bt_list,
+        "net_wealth_aa_by_age_range": net_wealth_aa_list,
+    
         "age_stairgraph": age_stairgraph,
         "share_stairgraph": share_stairgraph,
     }
