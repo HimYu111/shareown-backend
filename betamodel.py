@@ -73,7 +73,7 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
         return "Local authority name not found or no data in the specified column"
 
 #
-def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent):
+def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment):
     #Basic###################################################################
     print(postcode)
     print(propertyType)
@@ -87,13 +87,20 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     rent = int(rent)
     house_price_appreciation = get_house_data(postcode, propertyType)
     house_price_appreciation = float(house_price_appreciation)
+    loan_repayment = float(loan_repayment)
     print(house_price_appreciation)
+    loan_repayment = float(loan_repayment)
+
 
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
 
-    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD']
+    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'N1', 'N2', 'W', 'X', 
+    'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 
+    'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 
+    'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
+
 
     for col in additional_columns:
         df[col] = 0  # Initialize other columns here
@@ -208,8 +215,34 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         #income constraint 1 
         df['U'] = df['T'].cumsum()
         df['U'] = (df['U'] >= 1).astype(int)
+
+        #DSCR constraint
+    for i in range(len(df)):
+        # Calculate df['N1']
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N1'] = None
+        else:
+            max_term = max(retirement_age - age, 30)
+            numerator = mortgage_rate * (1 + mortgage_rate) ** max_term
+            denominator = (1 + mortgage_rate) ** max_term - 1
+            mortgage_payment = (df.at[i, 'F'] - df.at[i, 'Q']) * numerator / denominator
+            if 0.4 * df.at[i, 'I'] >= mortgage_payment:
+                df.at[i, 'N1'] = 1
+            else:
+                df.at[i, 'N1'] = 0
+    
+        #DSCR adjusted
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N2'] = None
+        else:
+            if df.loc[:i, 'N1'].sum() >= 1:
+                df.at[i, 'N2'] = 1
+            else:
+                df.at[i, 'N2'] = 0
+
         #home buying decision
-        df.at[i, 'V'] = df.at[i, 'S']*df.at[i, 'U']
+        df.at[i, 'V'] = df.at[i, 'S']*df.at[i, 'U']*df.at[i, 'N2']
+
     #home buying indicator  
     df.at[0, 'W'] = 1 if df.at[0, 'V'] != 0 else 0
     for i in range(1, len(df)):
@@ -324,6 +357,45 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         else:
             df.at[i, 'AW'] = 0
         df['AX'] = (df['AW'].cumsum() >= 1).astype(int)
+
+    #AC1 McCabe
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N3'] = None
+        else:
+            df.at[i, 'N3'] = 1 - (0.9 * df.at[i, 'I'] - loan_repayment - service_charge * df.at[i, 'F']) / (df.at[i, 'F'] * initial_rent_percent * (1 + inflation) ** 5)
+    #AC2 numerator
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N4'] = None
+        else:
+            df.at[i, 'N4'] = df.at[i, 'I'] - loan_repayment- service_charge * df.at[i, 'F'] - df.at[i, 'F'] * initial_rent_percent * (1 + inflation) ** 5
+    #AC2 denominator
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N5'] = None
+        else:
+            df.at[i, 'N5'] = df.at[i, 'F'] * (
+            (1 / 0.3) * LTV * mortgage_rate /
+            (1 - (1 / (1 + mortgage_rate) ** max(retirement_age - df.at[i, 'D'], mortgage_term))) -
+            initial_rent_percent * (1 + inflation) ** 5)
+    
+    #AC2 McCabe
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N6'] = None
+        else:
+            df.at[i, 'N6'] = df.at[i, 'N4'] / df.at[i, 'N5']
+    #AC indicator
+        if pd.isna(df.at[i, 'D']):
+            df.at[i, 'N7'] = None
+        else:
+            df.at[i, 'N7'] = 1 if (df.at[i, 'N3'] < df.at[i, 'N6']) and (df.at[i, 'N6'] >= 0.25) else 0
+    #AC adjusted
+        df['cumulative_sum_n7'] = df['N7'].cumsum()
+
+        # Set 'N8' to 1 if the cumulative sum is >= 1, otherwise set it to 0
+        df['N8'] = df['cumulative_sum_n7'].apply(lambda x: 1 if x >= 1 else 0)
+
+    #Home buying decision
+        df.at[i, 'AY'] = df.at[i, 'AP']*df.at[i, 'AT']*df.at[i, 'AV']*df.at[i, 'AX']*df.at[i, 'N8']
+
     #Home buying decision
         df.at[i, 'AY'] = df.at[i, 'AP']*df.at[i, 'AT']*df.at[i, 'AV']*df.at[i, 'AX']
     #SO indicator 
