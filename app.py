@@ -27,8 +27,6 @@ from emailmodel import save_email
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
-
-
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
@@ -58,16 +56,27 @@ def create_db():
     conn.commit()
     conn.close()
 
-def delete_database():
+def add_new_column():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
     try:
-        os.remove('data.db')
-        print("Database file deleted successfully.")
-    except FileNotFoundError:
-        print("Database file not found, and hence not deleted.")
+        # Add the new column 'loan_repayment' if it doesn't exist
+        c.execute('ALTER TABLE user_data ADD COLUMN loan_repayment REAL')
+        print("Column 'loan_repayment' added successfully.")
+    except sqlite3.OperationalError as e:
+        if "duplicate column name" in str(e):
+            print("Column 'loan_repayment' already exists. No need to add.")
+        else:
+            print(f"An error occurred: {e}")
+    finally:
+        conn.commit()
+        conn.close()
 
-delete_database()
-create_db() 
+# Ensure the database is created if it doesn't exist
+create_db()
 
+# Add the new column (this only adds the column if it doesn't already exist)
+add_new_column()
 
 @app.route('/', methods=['GET'])
 def hello_world():
@@ -83,7 +92,7 @@ def export_data():
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Timestamp'])
+        writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Loan Repayment', 'Timestamp'])
         for row in data:
             writer.writerow(row)
 
@@ -102,8 +111,8 @@ def predict():
 
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
-            c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                      (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent']))
+            c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                      (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loanRepayment']))
             conn.commit()
 
         results = betamodel.get_house_price_data(
@@ -118,6 +127,7 @@ def predict():
             data['headOfHouseholdAge'],
             data['savings'],
             data['currentRent'],
+            data['loanRepayment']  # Ensure this is being passed to the model
         )
         print("Prediction results:", results)
         return jsonify(results)
@@ -125,6 +135,10 @@ def predict():
         print(e)
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
 
 @app.route('/submit-email', methods=['POST'])
 def submit_email():
@@ -275,7 +289,11 @@ def download_data():
     output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow(['Session ID', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Timestamp'])
+    # Updated the header row to include 'Loan Repayment'
+    writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 
+                     'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 
+                     'Current Rent', 'Loan Repayment', 'Timestamp'])
+    
     writer.writerows(data)
 
     output.seek(0)
@@ -286,4 +304,3 @@ def download_data():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
-    
