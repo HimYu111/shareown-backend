@@ -161,6 +161,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
             df.at[i, 'J'] = df.at[i, 'I'] * non_housing_exp
             
     #non housing consumption + repayment
+    df.at[0, 'N0'] = df.at[0, 'J'] + loan_repayment
     for i in range (1, len(df)): 
         df.at[i, 'N0'] = df.at[i, 'J'] + loan_repayment
 
@@ -323,7 +324,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'AJ'] = df.at[i, 'D']
     #Discounted liquid wealth 
         df.at[i, 'AK'] = df.at[i, 'AG']/df.at[i, 'AI']
-    #Discounted liquid wealth 
+    #Discounted housing wealth 
         df.at[i, 'AL'] = df.at[i, 'AH']/df.at[i, 'AI']
     #Outstanding LTV
         df.at[i, 'AM'] = 100*df.at[i, 'AH']/df.at[i, 'F']

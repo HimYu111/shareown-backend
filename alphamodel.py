@@ -27,55 +27,19 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 170000
+house_price = 190000
 FTB = 0
-gross = 33000
+gross = 35000
 consumption = 1500
-age = 25
-savings = 0
-rent = 500
-loan_repayment = 1000
+age = 33
+savings = 10000
+rent = 1000
+loan_repayment = 500
 
 postcode = 'Sunderland'
 propertyType = 'Flat'
 bedrooms = '3+'
 occupation = 'doctor'
-
-def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    excel_path = os.path.join(script_dir, 'Appreciation Rates 1996 to 2023.xlsx')
-
-    if not os.path.exists(excel_path):
-        print("Excel file does not exist.")
-        return "Excel file does not exist."
-
-    try:
-        df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
-        print(df.columns)  # Debug: Print the DataFrame columns after load
-    except Exception as e:
-        return f"Failed to load Excel file: {e}"
-
-    propertyType = propertyType.lower()
-    propertyType_to_column = {
-        'detached': 'Detached',
-        'semi-detached': 'Semi-Detached',
-        'terraced': 'Terraced',
-        'flat': 'Apartment',
-        'undecided': 'Undecided'
-    }
-
-    if propertyType not in propertyType_to_column:
-        return "Invalid house type specified"
-    column_name = propertyType_to_column[propertyType]
-
-    try:
-        # Ensure case-insensitive matching for local authorities
-        df['Local authority name'] = df['Local authority name'].astype(str).str.lower()
-        # Try to get the house price appreciation value
-        house_price_appreciation = df[df['Local authority name'] == postcode.lower()][column_name].values[0]
-        return house_price_appreciation
-    except IndexError:
-        return "Local authority name not found or no data in the specified column"
 
 def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment):
     #Basic###################################################################
@@ -89,20 +53,22 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     age = int(age)
     savings = int(savings)
     rent = int(rent)
-    house_price_appreciation = get_house_data(postcode, propertyType)
+    house_price_appreciation = 0.05
     house_price_appreciation = float(house_price_appreciation)
-    loan_repayment = float(loan_repayment)
-
     print(house_price_appreciation)
+    loan_repayment = float(loan_repayment)
+    loan_repayment = loan_repayment*12
+
 
     num_rows = 68 - age
     retirement_age = 67
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
 
-    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'N1', 'N2', 'W', 'X', 
+    additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'N0', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'N1', 'N2', 'W', 'X', 
     'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 
     'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 
     'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
+
 
     for col in additional_columns:
         df[col] = 0  # Initialize other columns here
@@ -162,9 +128,15 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
             df.at[i, 'J'] = df.at[i, 'I'] * non_housing_exp
             
+    #non housing consumption + repayment
+    df.at[0, 'N0'] = df.at[0, 'J'] + loan_repayment
+    for i in range (1, len(df)): 
+        df.at[i, 'N0'] = df.at[i, 'J'] + loan_repayment
+
+
     #private rent and savings 
         df.at[0, 'K'] = annual_rent
-        df.at[0, 'L'] = df.at[0, 'I'] - df.at[0, 'J'] - df.at[0, 'K'] 
+        df.at[0, 'L'] = df.at[0, 'I'] - df.at[0, 'N0'] - df.at[0, 'K'] 
 
         for i in range(1, len(df)):
             if df.at[i-1, 'K'] is not None:
@@ -173,7 +145,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
                 df.at[i, 'K'] = None
         
         #Annual Savings 
-            df.at[i, 'L'] = df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'K'] 
+            df.at[i, 'L'] = df.at[i, 'I'] - df.at[i, 'N0'] - df.at[i, 'K'] 
 
      #Total Savings 
         df.at[0, 'M'] = (savings)
@@ -244,6 +216,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
         #home buying decision
         df.at[i, 'V'] = df.at[i, 'S']*df.at[i, 'U']*df.at[i, 'N2']
+
     #home buying indicator  
     df.at[0, 'W'] = 1 if df.at[0, 'V'] != 0 else 0
     for i in range(1, len(df)):
@@ -263,7 +236,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         if df.at[i, 'W'] == 1:
             df.at[i, 'Y'] = 0
         else:
-            df.at[i, 'Y'] = df.at[i, 'V'] * (df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * house_maintainance_cost)
+            df.at[i, 'Y'] = df.at[i, 'V'] * (df.at[i, 'I'] - df.at[i, 'N0'] - df.at[i, 'F'] * house_maintainance_cost)
         
         # Outstanding Loan
         if i == 0:
@@ -319,7 +292,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'AJ'] = df.at[i, 'D']
     #Discounted liquid wealth 
         df.at[i, 'AK'] = df.at[i, 'AG']/df.at[i, 'AI']
-    #Discounted liquid wealth 
+    #Discounted housing wealth 
         df.at[i, 'AL'] = df.at[i, 'AH']/df.at[i, 'AI']
     #Outstanding LTV
         df.at[i, 'AM'] = 100*df.at[i, 'AH']/df.at[i, 'F']
@@ -378,7 +351,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
             (1 - (1 / (1 + mortgage_rate) ** max(retirement_age - df.at[i, 'D'], mortgage_term))) -
             initial_rent_percent * (1 + inflation) ** 5)
     
-    
     #AC2 McCabe
         if pd.isna(df.at[i, 'D']):
             df.at[i, 'N6'] = None
@@ -397,6 +369,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     #Home buying decision
         df.at[i, 'AY'] = df.at[i, 'AP']*df.at[i, 'AT']*df.at[i, 'AV']*df.at[i, 'AX']*df.at[i, 'N8']
+
+    #Home buying decision
+        df.at[i, 'AY'] = df.at[i, 'AP']*df.at[i, 'AT']*df.at[i, 'AV']*df.at[i, 'AX']
     #SO indicator 
         if df.at[0, 'AY'] > 0: 
             df.at[0, 'AZ'] = 1 
@@ -430,7 +405,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'BF'] = df.at[i, 'BA'] 
 
 #############################################
-    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'J'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
+    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'N0'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
     df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
     df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
     df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
@@ -442,7 +417,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         if df.at[i, 'AZ'] == 1:
             df.at[i, 'BG'] = df.at[i, 'M']  
         else: 
-            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'J'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BM']* mortgage_rate))
+            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'N0'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BM']* mortgage_rate))
         
         df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
         
@@ -484,7 +459,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         #Savings after full staircasing indicator
         df['BP'] = df['BN'].cumsum().shift(fill_value=0).astype(int)
         #Savings 
-        df.at[i, 'BQ'] = df.at[i, 'BP']*(df.at[i, 'I']-df.at[i, 'J'] - (service_charge*df.at[i, 'F']))
+        df.at[i, 'BQ'] = df.at[i, 'BP']*(df.at[i, 'I']-df.at[i, 'N0'] - (service_charge*df.at[i, 'F']))
     df.at[0, 'BR'] = df.at[0, 'BO'] - df.at[0, 'BQ']
     for i in range(1, len(df)):
         df.at[i, 'BR'] = (df.at[i-1, 'BR']* (1 + mortgage_rate)) + df.at[i, 'BO'] - df.at[i, 'BQ']
@@ -654,7 +629,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
 
 
-    print(df[['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8']])
+    print(df[['AK', 'AL', 'CC', 'CD']])
 
 
     #Graphs 
@@ -699,10 +674,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "full_data": df.to_dict(orient="records"),
 
         "age_ranges": age_ranges,
-        "net_wealth_cd_by_age_range": net_wealth_cd_list,
-        "net_wealth_ak_by_age_range": net_wealth_ak_list,
-        "net_wealth_cc_by_age_range": net_wealth_cc_list,
-        "net_wealth_al_by_age_range": net_wealth_al_list,
     }
 
 
