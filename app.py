@@ -24,11 +24,17 @@ app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
 # Function to create the initial database schema
+import sqlite3
+
+# Function to create the database and ensure schema is correct
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-
-    # Create user_data table with loan_repayment included
+    
+    # Drop the existing table if it exists (optional)
+    c.execute('DROP TABLE IF EXISTS user_data')
+    
+    # Create the user_data table with the correct schema, including local_authority
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_data (
             session_id TEXT,
@@ -47,8 +53,8 @@ def create_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-
-    # Create emails table
+    
+    # Create the emails table if it doesn't exist
     c.execute('''
         CREATE TABLE IF NOT EXISTS emails (
             email TEXT
@@ -58,8 +64,9 @@ def create_db():
     conn.commit()
     conn.close()
 
-# Ensure the database is created if it doesn't exist
+# Call the function to create the database
 create_db()
+
 
 @app.route('/', methods=['GET'])
 def hello_world():
