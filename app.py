@@ -10,31 +10,29 @@ import io
 from smtplib import SMTP
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
 import smtplib
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
-
+# Import betamodel and emailmodel
 import betamodel
-
 from emailmodel import save_email
 
+# Initialize Flask
 app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
+# Function to create the initial database schema
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    
+
+    # Create user_data table with loan_repayment included
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_data (
             session_id TEXT,
-            local_authority TEXT,  
+            local_authority TEXT,
             property_type TEXT,
             bedrooms TEXT,
             occupation TEXT,
@@ -45,42 +43,27 @@ def create_db():
             head_of_household_age INTEGER,
             savings REAL,
             current_rent REAL,
+            loan_repayment REAL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Create emails table
     c.execute('''
         CREATE TABLE IF NOT EXISTS emails (
             email TEXT
         )
     ''')
+
     conn.commit()
     conn.close()
-
-def add_new_column():
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    try:
-        # Add the new column 'loan_repayment' if it doesn't exist
-        c.execute('ALTER TABLE user_data ADD COLUMN loan_repayment REAL')
-        print("Column 'loan_repayment' added successfully.")
-    except sqlite3.OperationalError as e:
-        if "duplicate column name" in str(e):
-            print("Column 'loan_repayment' already exists. No need to add.")
-        else:
-            print(f"An error occurred: {e}")
-    finally:
-        conn.commit()
-        conn.close()
 
 # Ensure the database is created if it doesn't exist
 create_db()
 
-# Add the new column (this only adds the column if it doesn't already exist)
-add_new_column()
-
 @app.route('/', methods=['GET'])
 def hello_world():
-    return jsonify({"msg": "POg"})
+    return jsonify({"msg": "Hello, world!"})
 
 @app.route('/export-data')
 def export_data():
@@ -92,14 +75,17 @@ def export_data():
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 'Current Rent', 'Loan Repayment', 'Timestamp'])
+        writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 
+                         'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 
+                         'Current Rent', 'Loan Repayment', 'Timestamp'])
+
         for row in data:
             writer.writerow(row)
 
         output.seek(0)
         conn.close()
 
-        return Response(output.getvalue(), mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=user_data.csv"})
+        return Response(output.getvalue(), mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=user_data.csv"})
     except Exception as e:
         return str(e), 500
 
@@ -112,7 +98,7 @@ def predict():
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
             c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                      (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loanRepayment']))
+                      (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loan_repayment']))
             conn.commit()
 
         results = betamodel.get_house_price_data(
@@ -127,7 +113,7 @@ def predict():
             data['headOfHouseholdAge'],
             data['savings'],
             data['currentRent'],
-            data['loanRepayment']  # Ensure this is being passed to the model
+            data['loan_repayment']
         )
         print("Prediction results:", results)
         return jsonify(results)
@@ -135,10 +121,6 @@ def predict():
         print(e)
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
 
 @app.route('/submit-email', methods=['POST'])
 def submit_email():
@@ -157,8 +139,6 @@ def submit_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
-
 @app.route('/submit-contact-form', methods=['POST'])
 def submit_contact_form():
     try:
@@ -166,9 +146,7 @@ def submit_contact_form():
         name = data.get('name')
         email = data.get('email')
         message = data.get('message')
-
-   
-
+        # You can further process the contact form data here
         return jsonify({'message': 'Contact form submitted successfully'}), 200
     except Exception as e:
         print(e)
@@ -180,14 +158,14 @@ def send_email():
         data = request.json
         sender_email = os.getenv('SMTP_EMAIL')  
         receiver_email = "s.milcheva@ucl.ac.uk"
-        password = os.getenv('SMTP_PASSWORD') 
+        password = os.getenv('SMTP_PASSWORD')
 
         message = MIMEMultipart("alternative")
         message["Subject"] = "New Contact Form Submission"
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        text = f"""\
+        text = f"""\ 
         Hi,
         You have received a new submission from your contact form.
         Name: {data['name']}
@@ -219,7 +197,6 @@ def get_emails():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
 def create_email_content(result):
     to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
     so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
@@ -247,7 +224,6 @@ def create_email_content(result):
     </html>
     """
     return html_content
-
 
 @app.route('/submit-results-email', methods=['POST'])
 def submit_results_email():
@@ -280,27 +256,7 @@ def submit_results_email():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def download_data():
-    conn = sqlite3.connect('data.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM user_data")
-    data = cursor.fetchall()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    # Updated the header row to include 'Loan Repayment'
-    writer.writerow(['Session ID', 'Local Authority', 'Property Type', 'Bedrooms', 'Occupation', 'House Price', 
-                     'Is First Time Buyer', 'Income', 'Month Spending', 'Age', 'Savings', 
-                     'Current Rent', 'Loan Repayment', 'Timestamp'])
-    
-    writer.writerows(data)
-
-    output.seek(0)
-    conn.close()
-
-    return Response(output.getvalue(), mimetype='text/csv', headers={"Content-Disposition": "attachment;filename=user_data.csv"})
-
+# Run the app on the specified port
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)

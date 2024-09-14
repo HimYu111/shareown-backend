@@ -630,7 +630,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
 
     print(df[['AK', 'AL', 'CC', 'CD']])
-
+    print(TO_liquid)
+    print(TO_housing)
+    print(SO_mortgage_finish)
+    print(SO_liquid)
+    print(SO_housing)
 
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
