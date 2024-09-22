@@ -277,7 +277,15 @@ def submit_results_email():
         data = request.json
         email = data.get('email')
         result = data.get('result')
-        inputs = data.get('inputs')  # Assuming the inputs are passed in the request body as 'inputs'
+        inputs = data.get('inputs')
+
+        # Check if inputs and result are valid
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        if not result:
+            return jsonify({'error': 'Result data is missing'}), 400
+        if not inputs:
+            return jsonify({'error': 'Input data is missing'}), 400  # Raise an error if inputs are missing
 
         sender_email = os.getenv('SMTP_EMAIL')
         receiver_email = email
