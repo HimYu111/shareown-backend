@@ -314,6 +314,7 @@ def submit_results_email():
         return jsonify({'message': 'Email sent successfully'}), 200
     except Exception as e:
         print("Exception occurred:", str(e))
+        traceback.print_exc()  # This will log the full traceback of the exception
         return jsonify({'error': 'Internal server error'}), 500
 
 # Run the app on the specified port
