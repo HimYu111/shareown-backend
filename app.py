@@ -217,22 +217,23 @@ def create_email_content(result, inputs):
     to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
     so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
 
-    # Creating a string with comma-separated input data
+    # Creating a string with comma-separated input data and using thousands separators for numbers
     input_data = f"""
         Postcode: {inputs['postcode']},
         Property Type: {inputs['propertyType']},
         Bedrooms: {inputs['bedrooms']},
         Occupation: {inputs['occupation']},
-        House Price: £{inputs['housePrice']},
+        House Price: £{int(inputs['housePrice']):,},
         First Time Buyer: {'Yes' if inputs['isFirstTimeBuyer'] else 'No'},
-        Income: £{inputs['income']},
-        Monthly Spending: £{inputs['monthspending']},
+        Income: £{int(inputs['income']):,},
+        Monthly Spending: £{int(inputs['monthspending']):,},
         Age: {inputs['headOfHouseholdAge']},
-        Savings: £{inputs['savings']},
-        Current Rent: £{inputs['currentRent']},
-        Loan Repayment: £{inputs['loan_repayment']}
+        Savings: £{int(inputs['savings']):,},
+        Current Rent: £{int(inputs['currentRent']):,},
+        Loan Repayment: £{int(inputs['loan_repayment']):,}
     """
 
+    # Adding thousands separators to the result values
     html_content = f"""
     <html>
     <body>
@@ -244,9 +245,9 @@ def create_email_content(result, inputs):
             <h2>Full Ownership</h2>
             <p>{to_affordability}</p>
             {f'''
-            <p>Minimum Deposit: £{result['TO_deposit']}</p>
-            <p>Monthly costs: £{result['TO_mortgage']}</p>
-            <p>Lifetime wealth: £{result['TO_housing']} in housing wealth, £{result['TO_liquid']} in savings</p>
+            <p>Minimum Deposit: £{int(result['TO_deposit']):,}</p>
+            <p>Monthly costs: £{int(result['TO_mortgage']):,}</p>
+            <p>Lifetime wealth: £{int(result['TO_housing']):,} in housing wealth, £{int(result['TO_liquid']):,} in savings</p>
             ''' if result['TO_deposit'] > 0 else ''}
         </div>
 
@@ -255,10 +256,10 @@ def create_email_content(result, inputs):
             <p>{so_affordability}</p>
             {f'''
             <p>Share Percentage: {result['SO_share']}%</p>
-            <p>Staircasing: £{result['SO_staircasing']}</p>
-            <p>Minimum Deposit: £{result['SO_deposit']}</p>
-            <p>Monthly costs: £{result['SO_mortgage']}</p>
-            <p>Lifetime wealth: £{result['SO_housing']} in housing wealth, £{result['SO_liquid']} in savings</p>
+            <p>Staircasing: £{int(result['SO_staircasing']):,}</p>
+            <p>Minimum Deposit: £{int(result['SO_deposit']):,}</p>
+            <p>Monthly costs: £{int(result['SO_mortgage']):,}</p>
+            <p>Lifetime wealth: £{int(result['SO_housing']):,} in housing wealth, £{int(result['SO_liquid']):,} in savings</p>
             ''' if result['SO_deposit'] > 0 else ''}
         </div>
     </body>
