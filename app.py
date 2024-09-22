@@ -282,21 +282,21 @@ def submit_results_email():
         print("Request method:", request.method)
         print("Headers:", request.headers)
         print("Content type:", request.content_type)
-        
+
         # Check if content type is indeed JSON
         if request.content_type != 'application/json':
             return jsonify({'error': 'Invalid content type, must be application/json'}), 400
-        
+
         # Log raw request data
         data = request.json
         print("Incoming request JSON data:", data)
 
-        # Now extract email, result, and inputs
+        # Extract fields
         email = data.get('email')
         result = data.get('result')
         inputs = data.get('inputs')
 
-        # Additional logging for individual fields
+        # Further logging for individual fields
         print("Extracted email:", email)
         print("Extracted result:", result)
         print("Extracted inputs:", inputs)
@@ -308,7 +308,7 @@ def submit_results_email():
             return jsonify({'error': 'Result data is missing'}), 400
         if not inputs:
             return jsonify({'error': 'Input data is missing'}), 400
-        
+
         # Further processing and email sending would go here
 
         return jsonify({'message': 'Email sent successfully'}), 200
