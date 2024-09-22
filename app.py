@@ -24,11 +24,17 @@ app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
 # Function to create the initial database schema
+import sqlite3
+
+# Function to create the database and ensure schema is correct
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-
-    # Create user_data table with loan_repayment included
+    
+    # Drop the existing table if it exists (optional)
+    c.execute('DROP TABLE IF EXISTS user_data')
+    
+    # Create the user_data table with the correct schema, including local_authority
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_data (
             session_id TEXT,
@@ -47,8 +53,8 @@ def create_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-
-    # Create emails table
+    
+    # Create the emails table if it doesn't exist
     c.execute('''
         CREATE TABLE IF NOT EXISTS emails (
             email TEXT
@@ -58,8 +64,9 @@ def create_db():
     conn.commit()
     conn.close()
 
-# Ensure the database is created if it doesn't exist
+# Call the function to create the database
 create_db()
+
 
 @app.route('/', methods=['GET'])
 def hello_world():
@@ -95,12 +102,14 @@ def predict():
         data = request.json
         session_id = data.get('sessionId')
 
+        # Save input data to the database
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
             c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loan_repayment']))
             conn.commit()
 
+        # Get prediction results
         results = betamodel.get_house_price_data(
             data['postcode'],
             data['propertyType'],
@@ -116,6 +125,12 @@ def predict():
             data['loan_repayment']
         )
         print("Prediction results:", results)
+
+        # Create email content with both result and input data
+        email_content = create_email_content(results, data)
+
+        # You can add code here to send the email using the email_content
+        
         return jsonify(results)
     except Exception as e:
         print(e)
