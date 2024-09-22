@@ -275,6 +275,7 @@ def create_email_content(result, inputs):
 def submit_results_email():
     try:
         data = request.json
+        print("Incoming request data:", data)  # Log the incoming data to debug
         email = data.get('email')
         result = data.get('result')
         inputs = data.get('inputs')
@@ -285,7 +286,7 @@ def submit_results_email():
         if not result:
             return jsonify({'error': 'Result data is missing'}), 400
         if not inputs:
-            return jsonify({'error': 'Input data is missing'}), 400  # Raise an error if inputs are missing
+            return jsonify({'error': 'Input data is missing'}), 400
 
         sender_email = os.getenv('SMTP_EMAIL')
         receiver_email = email
