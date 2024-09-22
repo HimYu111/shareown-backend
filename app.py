@@ -273,20 +273,25 @@ def submit_results_email():
         data = request.json
         email = data.get('email')
         result = data.get('result')
+        inputs = data.get('inputs')  # Assuming the inputs are passed in the request body as 'inputs'
 
+        # Sender and receiver email configuration
         sender_email = os.getenv('SMTP_EMAIL')
         receiver_email = email
         password = os.getenv('SMTP_PASSWORD')
 
+        # Create the email message
         message = MIMEMultipart("alternative")
         message["Subject"] = "Your Calculated Results"
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        html_content = create_email_content(result)
+        # Create the HTML content with both inputs and result
+        html_content = create_email_content(inputs, result)
         part = MIMEText(html_content, "html")
         message.attach(part)
 
+        # Send the email via SMTP
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
             server.login(sender_email, password)
@@ -297,8 +302,3 @@ def submit_results_email():
         print(e)
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
-# Run the app on the specified port
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
