@@ -102,14 +102,12 @@ def predict():
         data = request.json
         session_id = data.get('sessionId')
 
-        # Save input data to the database
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
             c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loan_repayment']))
             conn.commit()
 
-        # Get prediction results
         results = betamodel.get_house_price_data(
             data['postcode'],
             data['propertyType'],
@@ -125,12 +123,6 @@ def predict():
             data['loan_repayment']
         )
         print("Prediction results:", results)
-
-        # Create email content with both result and input data
-        email_content = create_email_content(results, data)
-
-        # You can add code here to send the email using the email_content
-        
         return jsonify(results)
     except Exception as e:
         print(e)
@@ -212,29 +204,24 @@ def get_emails():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def create_email_content(result, inputs):
-    # Safely retrieve values from the result using .get() to avoid errors
-    to_deposit = result.get('TO_deposit', 0)
-    so_deposit = result.get('SO_deposit', 0)
-
-    # Affordability messages
-    to_affordability = "You cannot afford full ownership with the current inputs." if to_deposit == 0 else "You can afford full ownership."
-    so_affordability = "You cannot afford shared ownership with the current inputs." if so_deposit == 0 else "You can afford shared ownership."
+def create_email_content(result, data):
+    to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
+    so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
 
     # Input data string with comma-separated values, formatted for readability
     input_data = f"""
-        Postcode: {inputs.get('postcode', 'N/A')},
-        Property Type: {inputs.get('propertyType', 'N/A')},
-        Bedrooms: {inputs.get('bedrooms', 'N/A')},
-        Occupation: {inputs.get('occupation', 'N/A')},
-        House Price: £{int(inputs.get('housePrice', 0)):,},
-        First Time Buyer: {'Yes' if inputs.get('isFirstTimeBuyer', False) else 'No'},
-        Income: £{int(inputs.get('income', 0)):,},
-        Monthly Spending: £{int(inputs.get('monthspending', 0)):,},
-        Age: {inputs.get('headOfHouseholdAge', 'N/A')},
-        Savings: £{int(inputs.get('savings', 0)):,},
-        Current Rent: £{int(inputs.get('currentRent', 0)):,},
-        Loan Repayment: £{int(inputs.get('loan_repayment', 0)):,}
+    Postcode: {data['postcode']},
+    Property Type: {data['propertyType']},
+    Bedrooms: {data['bedrooms']},
+    Occupation: {data['occupation']},
+    House Price: £{int(data['housePrice']):,},
+    First Time Buyer: {'Yes' if data['isFirstTimeBuyer'] else 'No'},
+    Income: £{int(data['income']):,},
+    Monthly Spending: £{int(data['monthspending']):,},
+    Age: {data['headOfHouseholdAge']},
+    Savings: £{int(data['savings']):,},
+    Current Rent: £{int(data['currentRent']):,},
+    Loan Repayment: £{int(data['loan_repayment']):,}
     """
 
     # HTML email content with both inputs and result data
@@ -251,25 +238,26 @@ def create_email_content(result, inputs):
         <p>{input_data}</p>
 
         <div>
+        <div>
             <h2>Full Ownership</h2>
             <p>{to_affordability}</p>
             {f'''
-            <p>Minimum Deposit: £{int(to_deposit):,}</p>
-            <p>Monthly costs: £{int(result.get('TO_mortgage', 0)):,}</p>
-            <p>Lifetime wealth: £{int(result.get('TO_housing', 0)):,} in housing wealth, £{int(result.get('TO_liquid', 0)):,} in savings</p>
-            ''' if to_deposit > 0 else ''}
+            <p>Minimum Deposit: £{int(result['TO_deposit']):,}</p>
+            <p>Monthly costs: £{int(result['TO_mortgage']):,}</p>
+            <p>Lifetime wealth: £{int(result['TO_housing']):,} in housing wealth, £{int(result['TO_liquid']):,} in savings</p>
+            ''' if result['TO_deposit'] > 0 else ''}
         </div>
 
         <div>
             <h2>Shared Ownership</h2>
             <p>{so_affordability}</p>
             {f'''
-            <p>Share Percentage: {result.get('SO_share', 'N/A')}%</p>
-            <p>Staircase Finish: £{int(result.get('SO_staircase_finish', 0)):,}</p>
-            <p>Minimum Deposit: £{int(so_deposit):,}</p>
-            <p>Monthly costs: £{int(result.get('SO_mortgage', 0)):,}</p>
-            <p>Lifetime wealth: £{int(result.get('SO_housing', 0)):,} in housing wealth, £{int(result.get('SO_liquid', 0)):,} in savings</p>
-            ''' if so_deposit > 0 else ''}
+            <p>Share Percentage: {result['SO_share']}%</p>
+            <p>Staircase Finish: £{int(result['SO_staircase_finish']):,}</p>
+            <p>Minimum Deposit: £{int(result['SO_deposit']):,}</p>
+            <p>Monthly costs: £{int(result['SO_mortgage']):,}</p>
+            <p>Lifetime wealth: £{int(result['SO_housing']):,} in housing wealth, £{int(result['SO_liquid']):,} in savings</p>
+            ''' if result['SO_deposit'] > 0 else ''}
         </div>
     </body>
     </html>
