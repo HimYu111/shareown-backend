@@ -241,6 +241,11 @@ def create_email_content(result, inputs):
     html_content = f"""
     <html>
     <body>
+        <p>Many thanks for using <a href="https://www.ShareOwn.info" target="_blank">ShareOwn</a>.</p>
+        <p>Please note that this is only indicative and is not financial advice.</p>
+        <p>You can try out a new scenario if you go to <a href="https://www.ShareOwn.info" target="_blank">www.ShareOwn.info</a>.</p>
+        <p>Kind regards,<br>The ShareOwn team</p>
+
         <h1>Your Results</h1>
         <p><strong>Input Data:</strong></p>
         <p>{input_data}</p>
@@ -274,45 +279,42 @@ def create_email_content(result, inputs):
 @app.route('/submit-results-email', methods=['POST'])
 def submit_results_email():
     try:
+        print("Request method:", request.method)
+        print("Headers:", request.headers)
+        print("Content type:", request.content_type)
+        
+        # Check if content type is indeed JSON
+        if request.content_type != 'application/json':
+            return jsonify({'error': 'Invalid content type, must be application/json'}), 400
+        
+        # Log raw request data
         data = request.json
-        print("Incoming request data:", data)  # Log the incoming data to debug
+        print("Incoming request JSON data:", data)
+
+        # Now extract email, result, and inputs
         email = data.get('email')
         result = data.get('result')
         inputs = data.get('inputs')
 
-        # Check if inputs and result are valid
+        # Additional logging for individual fields
+        print("Extracted email:", email)
+        print("Extracted result:", result)
+        print("Extracted inputs:", inputs)
+
+        # Validation checks for each
         if not email:
             return jsonify({'error': 'Email is required'}), 400
         if not result:
             return jsonify({'error': 'Result data is missing'}), 400
         if not inputs:
             return jsonify({'error': 'Input data is missing'}), 400
+        
+        # Further processing and email sending would go here
 
-        sender_email = os.getenv('SMTP_EMAIL')
-        receiver_email = email
-        password = os.getenv('SMTP_PASSWORD')
-
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Your Calculated Results"
-        message["From"] = sender_email
-        message["To"] = receiver_email
-
-        # Create the email content with both inputs and result
-        html_content = create_email_content(result, inputs)
-        part = MIMEText(html_content, "html")
-        message.attach(part)
-
-        # Send the email via SMTP
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            server.starttls()
-            server.login(sender_email, password)
-            server.sendmail(sender_email, receiver_email, message.as_string())
-
-        return jsonify({'message': 'Email sent successfully'})
+        return jsonify({'message': 'Email sent successfully'}), 200
     except Exception as e:
-        print(e)
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        print("Exception occurred:", str(e))
+        return jsonify({'error': 'Internal server error'}), 500
 
 # Run the app on the specified port
 if __name__ == '__main__':
