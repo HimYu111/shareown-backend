@@ -102,12 +102,14 @@ def predict():
         data = request.json
         session_id = data.get('sessionId')
 
+        # Save input data to the database
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
             c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loan_repayment']))
             conn.commit()
 
+        # Get prediction results
         results = betamodel.get_house_price_data(
             data['postcode'],
             data['propertyType'],
@@ -123,6 +125,12 @@ def predict():
             data['loan_repayment']
         )
         print("Prediction results:", results)
+
+        # Create email content with both result and input data
+        email_content = create_email_content(results, data)
+
+        # You can add code here to send the email using the email_content
+        
         return jsonify(results)
     except Exception as e:
         print(e)
@@ -204,28 +212,54 @@ def get_emails():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def create_email_content(result):
+def create_email_content(result, inputs):
+    # Handling affordability messages for Full Ownership (FO) and Shared Ownership (SO)
     to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
     so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
+
+    # Creating a string with comma-separated input data
+    input_data = f"""
+        Postcode: {inputs['postcode']},
+        Property Type: {inputs['propertyType']},
+        Bedrooms: {inputs['bedrooms']},
+        Occupation: {inputs['occupation']},
+        House Price: £{inputs['housePrice']},
+        First Time Buyer: {'Yes' if inputs['isFirstTimeBuyer'] else 'No'},
+        Income: £{inputs['income']},
+        Monthly Spending: £{inputs['monthspending']},
+        Age: {inputs['headOfHouseholdAge']},
+        Savings: £{inputs['savings']},
+        Current Rent: £{inputs['currentRent']},
+        Loan Repayment: £{inputs['loan_repayment']}
+    """
 
     html_content = f"""
     <html>
     <body>
         <h1>Your Results</h1>
-        <p>Value of home: £{result['house_price']}</p>
+        <p><strong>Input Data:</strong></p>
+        <p>{input_data}</p>
+        
         <div>
             <h2>Full Ownership</h2>
             <p>{to_affordability}</p>
+            {f'''
             <p>Minimum Deposit: £{result['TO_deposit']}</p>
             <p>Monthly costs: £{result['TO_mortgage']}</p>
             <p>Lifetime wealth: £{result['TO_housing']} in housing wealth, £{result['TO_liquid']} in savings</p>
+            ''' if result['TO_deposit'] > 0 else ''}
         </div>
+
         <div>
             <h2>Shared Ownership</h2>
             <p>{so_affordability}</p>
+            {f'''
+            <p>Share Percentage: {result['SO_share']}%</p>
+            <p>Staircasing: £{result['SO_staircasing']}</p>
             <p>Minimum Deposit: £{result['SO_deposit']}</p>
             <p>Monthly costs: £{result['SO_mortgage']}</p>
             <p>Lifetime wealth: £{result['SO_housing']} in housing wealth, £{result['SO_liquid']} in savings</p>
+            ''' if result['SO_deposit'] > 0 else ''}
         </div>
     </body>
     </html>
