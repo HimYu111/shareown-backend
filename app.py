@@ -24,17 +24,11 @@ app = Flask(__name__)
 CORS(app, resources={r"*": {"origins": "*"}})
 
 # Function to create the initial database schema
-import sqlite3
-
-# Function to create the database and ensure schema is correct
 def create_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    
-    # Drop the existing table if it exists (optional)
-    c.execute('DROP TABLE IF EXISTS user_data')
-    
-    # Create the user_data table with the correct schema, including local_authority
+
+    # Create user_data table with loan_repayment included
     c.execute('''
         CREATE TABLE IF NOT EXISTS user_data (
             session_id TEXT,
@@ -53,8 +47,8 @@ def create_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
-    # Create the emails table if it doesn't exist
+
+    # Create emails table
     c.execute('''
         CREATE TABLE IF NOT EXISTS emails (
             email TEXT
@@ -64,9 +58,8 @@ def create_db():
     conn.commit()
     conn.close()
 
-# Call the function to create the database
+# Ensure the database is created if it doesn't exist
 create_db()
-
 
 @app.route('/', methods=['GET'])
 def hello_world():
@@ -102,14 +95,12 @@ def predict():
         data = request.json
         session_id = data.get('sessionId')
 
-        # Save input data to the database
         with sqlite3.connect('data.db') as conn:
             c = conn.cursor()
             c.execute("INSERT INTO user_data (session_id, local_authority, property_type, bedrooms, occupation, house_price, is_first_time_buyer, income, month_spending, head_of_household_age, savings, current_rent, loan_repayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (session_id, data['postcode'], data['propertyType'], data['bedrooms'], data['occupation'], data['housePrice'], data['isFirstTimeBuyer'], data['income'], data['monthspending'], data['headOfHouseholdAge'], data['savings'], data['currentRent'], data['loan_repayment']))
             conn.commit()
 
-        # Get prediction results
         results = betamodel.get_house_price_data(
             data['postcode'],
             data['propertyType'],
@@ -125,12 +116,6 @@ def predict():
             data['loan_repayment']
         )
         print("Prediction results:", results)
-
-        # Create email content with both result and input data
-        email_content = create_email_content(results, data)
-
-        # You can add code here to send the email using the email_content
-        
         return jsonify(results)
     except Exception as e:
         print(e)
@@ -213,54 +198,58 @@ def get_emails():
         return jsonify({'error': str(e)}), 500
 
 def create_email_content(result, inputs):
-    # Handling affordability messages for Full Ownership (FO) and Shared Ownership (SO)
-    to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
-    so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
+    # Safely retrieve values from the result using .get() to avoid errors
+    to_deposit = result.get('TO_deposit', 0)
+    so_deposit = result.get('SO_deposit', 0)
 
-    # Creating a string with comma-separated input data and using thousands separators for numbers
+    # Affordability messages
+    to_affordability = "You cannot afford full ownership with the current inputs." if to_deposit == 0 else "You can afford full ownership."
+    so_affordability = "You cannot afford shared ownership with the current inputs." if so_deposit == 0 else "You can afford shared ownership."
+
+    # Input data string with comma-separated values, formatted for readability
     input_data = f"""
-        Postcode: {inputs['postcode']},
-        Property Type: {inputs['propertyType']},
-        Bedrooms: {inputs['bedrooms']},
-        Occupation: {inputs['occupation']},
-        House Price: £{int(inputs['housePrice']):,},
-        First Time Buyer: {'Yes' if inputs['isFirstTimeBuyer'] else 'No'},
-        Income: £{int(inputs['income']):,},
-        Monthly Spending: £{int(inputs['monthspending']):,},
-        Age: {inputs['headOfHouseholdAge']},
-        Savings: £{int(inputs['savings']):,},
-        Current Rent: £{int(inputs['currentRent']):,},
-        Loan Repayment: £{int(inputs['loan_repayment']):,}
+        Postcode: {inputs.get('postcode', 'N/A')},
+        Property Type: {inputs.get('propertyType', 'N/A')},
+        Bedrooms: {inputs.get('bedrooms', 'N/A')},
+        Occupation: {inputs.get('occupation', 'N/A')},
+        House Price: £{int(inputs.get('housePrice', 0)):,},
+        First Time Buyer: {'Yes' if inputs.get('isFirstTimeBuyer', False) else 'No'},
+        Income: £{int(inputs.get('income', 0)):,},
+        Monthly Spending: £{int(inputs.get('monthspending', 0)):,},
+        Age: {inputs.get('headOfHouseholdAge', 'N/A')},
+        Savings: £{int(inputs.get('savings', 0)):,},
+        Current Rent: £{int(inputs.get('currentRent', 0)):,},
+        Loan Repayment: £{int(inputs.get('loan_repayment', 0)):,}
     """
 
-    # Adding thousands separators to the result values
+    # HTML email content with both inputs and result data
     html_content = f"""
     <html>
     <body>
         <h1>Your Results</h1>
         <p><strong>Input Data:</strong></p>
         <p>{input_data}</p>
-        
+
         <div>
             <h2>Full Ownership</h2>
             <p>{to_affordability}</p>
             {f'''
-            <p>Minimum Deposit: £{int(result['TO_deposit']):,}</p>
-            <p>Monthly costs: £{int(result['TO_mortgage']):,}</p>
-            <p>Lifetime wealth: £{int(result['TO_housing']):,} in housing wealth, £{int(result['TO_liquid']):,} in savings</p>
-            ''' if result['TO_deposit'] > 0 else ''}
+            <p>Minimum Deposit: £{int(to_deposit):,}</p>
+            <p>Monthly costs: £{int(result.get('TO_mortgage', 0)):,}</p>
+            <p>Lifetime wealth: £{int(result.get('TO_housing', 0)):,} in housing wealth, £{int(result.get('TO_liquid', 0)):,} in savings</p>
+            ''' if to_deposit > 0 else ''}
         </div>
 
         <div>
             <h2>Shared Ownership</h2>
             <p>{so_affordability}</p>
             {f'''
-            <p>Share Percentage: {result['SO_share']}%</p>
-            <p>Staircase Finish: £{int(result['SO_staircase_finish']):,}</p>
-            <p>Minimum Deposit: £{int(result['SO_deposit']):,}</p>
-            <p>Monthly costs: £{int(result['SO_mortgage']):,}</p>
-            <p>Lifetime wealth: £{int(result['SO_housing']):,} in housing wealth, £{int(result['SO_liquid']):,} in savings</p>
-            ''' if result['SO_deposit'] > 0 else ''}
+            <p>Share Percentage: {result.get('SO_share', 'N/A')}%</p>
+            <p>Staircase Finish: £{int(result.get('SO_staircase_finish', 0)):,}</p>
+            <p>Minimum Deposit: £{int(so_deposit):,}</p>
+            <p>Monthly costs: £{int(result.get('SO_mortgage', 0)):,}</p>
+            <p>Lifetime wealth: £{int(result.get('SO_housing', 0)):,} in housing wealth, £{int(result.get('SO_liquid', 0)):,} in savings</p>
+            ''' if so_deposit > 0 else ''}
         </div>
     </body>
     </html>
@@ -275,19 +264,17 @@ def submit_results_email():
         result = data.get('result')
         inputs = data.get('inputs')  # Assuming the inputs are passed in the request body as 'inputs'
 
-        # Sender and receiver email configuration
         sender_email = os.getenv('SMTP_EMAIL')
         receiver_email = email
         password = os.getenv('SMTP_PASSWORD')
 
-        # Create the email message
         message = MIMEMultipart("alternative")
         message["Subject"] = "Your Calculated Results"
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        # Create the HTML content with both inputs and result
-        html_content = create_email_content(inputs, result)
+        # Create the email content with both inputs and result
+        html_content = create_email_content(result, inputs)
         part = MIMEText(html_content, "html")
         message.attach(part)
 
@@ -302,7 +289,8 @@ def submit_results_email():
         print(e)
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-    
+
+# Run the app on the specified port
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
