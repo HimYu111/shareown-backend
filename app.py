@@ -267,43 +267,34 @@ def create_email_content(result, data):
 @app.route('/submit-results-email', methods=['POST'])
 def submit_results_email():
     try:
-        print("Request method:", request.method)
-        print("Headers:", request.headers)
-        print("Content type:", request.content_type)
-
-        # Check if content type is indeed JSON
-        if request.content_type != 'application/json':
-            return jsonify({'error': 'Invalid content type, must be application/json'}), 400
-
-        # Log raw request data
         data = request.json
-        print("Incoming request JSON data:", data)
-
-        # Extract fields
         email = data.get('email')
         result = data.get('result')
-        inputs = data.get('inputs')
 
-        # Further logging for individual fields
-        print("Extracted email:", email)
-        print("Extracted result:", result)
-        print("Extracted inputs:", inputs)
+        sender_email = os.getenv('SMTP_EMAIL')
+        receiver_email = email
+        password = os.getenv('SMTP_PASSWORD')
 
-        # Validation checks for each
-        if not email:
-            return jsonify({'error': 'Email is required'}), 400
-        if not result:
-            return jsonify({'error': 'Result data is missing'}), 400
-        if not inputs:
-            return jsonify({'error': 'Input data is missing'}), 400
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Your Calculated Results"
+        message["From"] = sender_email
+        message["To"] = receiver_email
 
-        # Further processing and email sending would go here
+        html_content = create_email_content(result, data)
+        part = MIMEText(html_content, "html")
+        message.attach(part)
 
-        return jsonify({'message': 'Email sent successfully'}), 200
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+
+        return jsonify({'message': 'Email sent successfully'})
     except Exception as e:
-        print("Exception occurred:", str(e))
-        traceback.print_exc()  # This will log the full traceback of the exception
-        return jsonify({'error': 'Internal server error'}), 500
+        print(e)
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    
 
 # Run the app on the specified port
 if __name__ == '__main__':
