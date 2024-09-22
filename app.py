@@ -204,24 +204,24 @@ def get_emails():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def create_email_content(result, data):
+def create_email_content(result):
     to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
     so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
 
     # Input data string with comma-separated values, formatted for readability
     input_data = f"""
-    Postcode: {data['postcode']},
-    Property Type: {data['propertyType']},
-    Bedrooms: {data['bedrooms']},
-    Occupation: {data['occupation']},
-    House Price: £{int(data['housePrice']):,},
-    First Time Buyer: {'Yes' if data['isFirstTimeBuyer'] else 'No'},
-    Income: £{int(data['income']):,},
-    Monthly Spending: £{int(data['monthspending']):,},
-    Age: {data['headOfHouseholdAge']},
-    Savings: £{int(data['savings']):,},
-    Current Rent: £{int(data['currentRent']):,},
-    Loan Repayment: £{int(data['loan_repayment']):,}
+    Postcode: {result['postcode']},
+    Property Type: {result['propertyType']},
+    Bedrooms: {result['bedrooms']},
+    Occupation: {result['occupation']},
+    House Price: £{int(result['housePrice']):,},
+    First Time Buyer: {'Yes' if result['isFirstTimeBuyer'] else 'No'},
+    Income: £{int(result['income']):,},
+    Monthly Spending: £{int(result['monthspending']):,},
+    Age: {result['headOfHouseholdAge']},
+    Savings: £{int(result['savings']):,},
+    Current Rent: £{int(result['currentRent']):,},
+    Loan Repayment: £{int(result['loan_repayment']):,}
     """
 
     # HTML email content with both inputs and result data
