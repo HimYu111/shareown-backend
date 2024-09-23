@@ -441,7 +441,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
     df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
     df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
-    df.at[0, 'BH'] = min([0 + (df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 1])
+    df.at[0, 'BH'] = min([(0 + (df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F']), 0.75])
     df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else min([df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']])
 
 
