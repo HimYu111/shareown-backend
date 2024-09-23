@@ -603,20 +603,18 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     except (ValueError, IndexError) as e:
         SO_liquid = 0      
 
-    higher_income_postcodes = [
-        "City of London", "London", "Barking and Dagenham", "Barnet", "Bexley", "Brent", "Bromley", "Camden", "Croydon", 
-        "Ealing", "Enfield", "Greenwich", "Hackney", "Hammersmith and Fulham", "Haringey", "Harrow", "Havering", 
-        "Hillingdon", "Hounslow", "Islington", "Kensington and Chelsea", "Kingston upon Thames", "Lambeth", "Lewisham", 
-        "Merton", "Newham", "Redbridge", "Richmond upon Thames", "Southwark", "Sutton", "Tower Hamlets", "Waltham Forest", 
-        "Wandsworth", "Westminster"
-    ]
+    income_threshold = 90000 if postcode.lower() in ["city of london", "london", "barking and dagenham", "barnet", "bexley", "brent", "bromley", "camden", "croydon", 
+    "ealing", "enfield", "greenwich", "hackney", "hammersmith and fulham", "haringey", "harrow", "havering", 
+    "hillingdon", "hounslow", "islington", "kensington and chelsea", "kingston upon thames", "lambeth", "lewisham", 
+    "merton", "newham", "redbridge", "richmond upon thames", "southwark", "sutton", "tower hamlets", "waltham forest", 
+    "wandsworth", "westminster"] else 80000
 
-    # Modify the try block
+    # Final condition based on income
     try:
-        if (postcode in higher_income_postcodes and income >= 90000) or (postcode not in higher_income_postcodes and income >= 80000):
+        if gross >= income_threshold:
             SO_housing = int(1)
         else:
-            SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
+            SO_housing = int(df.loc[df['D'] == age, 'CD'].iloc[0])  # Assuming df is already defined
     except (ValueError, IndexError) as e:
         SO_housing = 0
 
