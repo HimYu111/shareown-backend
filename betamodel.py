@@ -752,6 +752,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_house_data": SO_house_data,
         "house_price": house_price,
         "income": gross,
+        "postcode": postcode,
         "full_data": df.to_dict(orient="records"),
 
         "age_ranges": age_ranges,
