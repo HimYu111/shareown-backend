@@ -222,19 +222,19 @@ def create_email_content(result):
     to_affordability = "You cannot afford full ownership with the current inputs." if result['TO_deposit'] == 0 else "You can afford full ownership."
     so_affordability = "You cannot afford shared ownership with the current inputs." if result['SO_deposit'] == 0 else "You can afford shared ownership."
 
-    # Input data string with comma-separated values, formatted for readability
+    # Input data string with each entry starting on a new line
     input_data = f"""
-    Postcode: {result['postcode']},
-    Property Type: {result['propertyType']},
-    Bedrooms: {result['bedrooms']},
-    Occupation: {result['occupation']},
-    House Price: £{int(result['housePrice']):,},
-    First Time Buyer: {'Yes' if result['isFirstTimeBuyer'] else 'No'},
-    Income: £{int(result['income']):,},
-    Monthly Spending: £{int(result['monthspending']):,},
-    Age: {result['headOfHouseholdAge']},
-    Savings: £{int(result['savings']):,},
-    Current Rent: £{int(result['currentRent']):,},
+    Postcode: {result['postcode']}<br>
+    Property Type: {result['propertyType']}<br>
+    Bedrooms: {result['bedrooms']}<br>
+    Occupation: {result['occupation']}<br>
+    House Price: £{int(result['housePrice']):,}<br>
+    First Time Buyer: {'Yes' if result['isFirstTimeBuyer'] else 'No'}<br>
+    Income: £{int(result['income']):,}<br>
+    Monthly Spending: £{int(result['monthspending']):,}<br>
+    Age: {result['headOfHouseholdAge']}<br>
+    Savings: £{int(result['savings']):,}<br>
+    Current Rent: £{int(result['currentRent']):,}<br>
     Loan Repayment: £{int(result['loan_repayment']):,}
     """
 
@@ -273,6 +273,16 @@ def create_email_content(result):
             <p>Lifetime wealth: £{int(result['SO_housing']):,} in housing wealth, £{int(result['SO_liquid']):,} in savings</p>
             ''' if result['SO_deposit'] > 0 else ''}
         </div>
+
+        <h3>What is Shared Ownership?</h3>
+        <p>Shared ownership allows you to buy a percentage of a property and pay rent on the remaining share. 
+        Over time, you can increase your ownership stake through a process known as 'staircasing'. 
+        As you staircase, you buy additional shares in the property, eventually owning up to 100% if desired, which reduces your rent as your ownership increases.</p>
+
+        <p>Here, "Share Percentage" is the maximum share you can afford to purchase initially while the "Minimum Deposit" is the minimum you will need to start this process. 
+        "Staircase Finish" is when you will staircase to 100%, assuming you try to purchase as much as quickly as possible.</p>
+
+
     </body>
     </html>
     """
