@@ -123,7 +123,21 @@ def predict():
             data['loan_repayment']
         )
         print("Prediction results:", results)
-        return jsonify(results)
+        return jsonify({
+            **results,
+            'postcode': data['postcode'],
+            'propertyType': data['propertyType'],
+            'bedrooms': data['bedrooms'],
+            'occupation': data['occupation'],
+            'housePrice': data['housePrice'],
+            'isFirstTimeBuyer': data['isFirstTimeBuyer'],
+            'income': data['income'],
+            'monthspending': data['monthspending'],
+            'headOfHouseholdAge': data['headOfHouseholdAge'],
+           'savings': data['savings'],
+            'currentRent': data['currentRent'],
+            'loan_repayment': data['loan_repayment']
+        })
     except Exception as e:
         print(e)
         traceback.print_exc()
