@@ -267,7 +267,7 @@ def create_email_content(result):
             <p>{so_affordability}</p>
             {f'''
             <p>Share Percentage: {result['SO_share']}%</p>
-            <p>Staircase Finish: £{int(result['SO_staircase_finish']):,}</p>
+            <p>Staircase Finish: {int(result['SO_staircase_finish']):,}</p>
             <p>Minimum Deposit: £{int(result['SO_deposit']):,}</p>
             <p>Monthly costs: £{int(result['SO_mortgage']):,}</p>
             <p>Lifetime wealth: £{int(result['SO_housing']):,} in housing wealth, £{int(result['SO_liquid']):,} in savings</p>
