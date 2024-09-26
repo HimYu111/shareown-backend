@@ -280,7 +280,7 @@ def submit_results_email():
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        html_content = create_email_content(result, data)
+        html_content = create_email_content(result)
         part = MIMEText(html_content, "html")
         message.attach(part)
 
