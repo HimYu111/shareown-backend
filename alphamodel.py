@@ -10,6 +10,7 @@ inflation_adjustment = 0.5
 savings_rate = 0.03
 inflation = 0.03
 mortgage_rate = 0.04
+#house_price_appreciation = 0.05
 house_maintainance_cost = 0.01
 mortgage_term = 30
 transaction_cost = 0
@@ -27,19 +28,54 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 190000
+house_price = 400000
 FTB = 0
-gross = 35000
-consumption = 1500
-age = 33
+gross = 52500
+consumption = 1000
+age = 37
 savings = 10000
-rent = 1000
-loan_repayment = 500
+rent = 1300
+loan_repayment = 0
+postcode = "Basildon"
+propertyType = "Terraced"
+bedrooms = 2
+occupation = "Administrative occupations"
 
-postcode = 'Sunderland'
-propertyType = 'Flat'
-bedrooms = '3+'
-occupation = 'doctor'
+def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    excel_path = os.path.join(script_dir, 'Appreciation Rates 1996 to 2023.xlsx')
+
+    if not os.path.exists(excel_path):
+        print("Excel file does not exist.")
+        return "Excel file does not exist."
+
+    try:
+        df = pd.read_excel(excel_path, engine='openpyxl', header=6, sheet_name=sheet_name)
+        print(df.columns)  # Debug: Print the DataFrame columns after load
+    except Exception as e:
+        return f"Failed to load Excel file: {e}"
+
+    propertyType = propertyType.lower()
+    propertyType_to_column = {
+        'detached': 'Detached',
+        'semi-detached': 'Semi-Detached',
+        'terraced': 'Terraced',
+        'apartment': 'Apartment',
+        'undecided': 'Undecided'
+    }
+
+    if propertyType not in propertyType_to_column:
+        return "Invalid house type specified"
+    column_name = propertyType_to_column[propertyType]
+
+    try:
+        # Ensure case-insensitive matching for local authorities
+        df['Local authority name'] = df['Local authority name'].astype(str).str.lower()
+        # Try to get the house price appreciation value
+        house_price_appreciation = df[df['Local authority name'] == postcode.lower()][column_name].values[0]
+        return house_price_appreciation
+    except IndexError:
+        return "Local authority name not found or no data in the specified column"
 
 def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment):
     #Basic###################################################################
@@ -542,9 +578,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     except (ValueError, IndexError) as e:
         TO_mortgage = 0
 
-    #print(TO_housing)
-    #print(TO_mortgage)
-
 ##################
     try:
         SO_start_age = int(df.loc[df[df['AZ'] == 1].index[0], 'D'])
@@ -572,14 +605,20 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_liquid = 0      
 
     try:
+        SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
+    except (ValueError, IndexError) as e:
+        SO_housing = 0    
+
+    print(SO_housing)
+    print(df['CD'])
+
+    try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
                           ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) 
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
         
-    print(SO_mortgage)
-
     try:
         SO_deposit = int((df.loc[df['AO'] != 0, 'F'].iloc[0]) * 0.05 * 0.25)
     except (ValueError, IndexError) as e:
@@ -596,7 +635,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     TO_housing = round(TO_housing / 1000) * 1000
     SO_housing = round(SO_housing / 1000) * 1000
     
-    print(SO_share)
 
     age_ranges = ["20", "30", "40", "50", "60", "67"]
     age_ranges_dict = {
@@ -726,6 +764,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "age_stairgraph": age_stairgraph,
         "share_stairgraph": share_stairgraph,
     }
+
     return results
     
 results = get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment)

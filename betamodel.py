@@ -603,6 +603,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     except (ValueError, IndexError) as e:
         SO_liquid = 0      
 
+    try:
         SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
     except (ValueError, IndexError) as e:
         SO_housing = 0    
