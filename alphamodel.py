@@ -53,7 +53,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     age = int(age)
     savings = int(savings)
     rent = int(rent)
-    house_price_appreciation = 0.05
+    house_price_appreciation = get_house_data(postcode, propertyType)
     house_price_appreciation = float(house_price_appreciation)
     print(house_price_appreciation)
     loan_repayment = float(loan_repayment)
@@ -409,7 +409,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
     df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
     df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
-    df.at[0, 'BH'] = min([0 + (df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 1])
+    df.at[0, 'BH'] = 1 if df.at[0, 'BH'] == 1 else min((df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 0.75 if df.at[0, 'BH'] == 0 else 1)
     df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else min([df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']])
 
 
@@ -425,7 +425,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         
         df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
         
-        df.at[i, 'BH'] = 1 if df.at[i-1, 'BH'] ==1 else min((df.at[i-1, 'BH']+(df.at[i, 'BG']+df.at[i, 'BL'])/df.at[i, 'F']), 1)
+        df.at[i, 'BH'] = 1 if df.at[i-1, 'BH'] == 1 else (
+            min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 0.75)
+            if df.at[i-1, 'BH'] == 0 else
+            min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
+        )        
         
         if df.at[i, 'BH'] < 1:
             df.at[i, 'BM'] = (df.at[i-1, 'BM'] + df.at[i, 'BL']*df.at[i, 'BF'])  
@@ -568,14 +572,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_liquid = 0      
 
     try:
-        if income >= 90000: 
-            SO_housing = int(1)
-        else:
-            SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
-    except (ValueError, IndexError) as e:
-        SO_housing = 0    
-
-    try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
                           ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) 
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
@@ -602,39 +598,80 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     
     print(SO_share)
 
-    age_ranges = ["18-29", "30-39", "40-49", "50-59", "60-69"]
+    age_ranges = ["20", "30", "40", "50", "60", "67"]
     age_ranges_dict = {
-        "18-29": range(18, 30),
-        "30-39": range(30, 40),
-        "40-49": range(40, 50),
-        "50-59": range(50, 60),
-        "60-69": range(60, 70)
+        "20": 20,
+        "30": 30,
+        "40": 40,
+        "50": 50,
+        "60": 60,
+        "67": 67
     }
 
-    net_wealth_cd_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
-    net_wealth_ak_sums = {key: 0 for key in age_ranges}  # For 'AK' column sums
-    net_wealth_cc_sums = {key: 0 for key in age_ranges}  # For 'CD' column sums
-    net_wealth_al_sums = {key: 0 for key in age_ranges}
+    # Initialize dictionaries to store the values at the last age of each range
+    net_wealth_cd_values = {key: 0 for key in age_ranges}
+    net_wealth_ak_values = {key: 0 for key in age_ranges}
+    net_wealth_cc_values = {key: 0 for key in age_ranges}
+    net_wealth_al_values = {key: 0 for key in age_ranges}
+    net_wealth_bt_values = {key: 0 for key in age_ranges}
+    net_wealth_aa_values = {key: 0 for key in age_ranges}
 
-    # Calculate sums for each row in the DataFrame
+    # Iterate over the DataFrame and update the values when the age matches the end of the range
     for i in range(len(df)):
         age_value = df.at[i, 'D']
-        for age_range_key, age_range in age_ranges_dict.items():
-            if age_value in age_range:
-                net_wealth_cd_sums[age_range_key] += df.at[i, 'CD']
-                net_wealth_ak_sums[age_range_key] += df.at[i, 'AK']
-                net_wealth_cc_sums[age_range_key] += df.at[i, 'CC']
-                net_wealth_al_sums[age_range_key] += df.at[i, 'AL']
+        for age_range_key, last_age in age_ranges_dict.items():
+            if age_value == last_age:
+                net_wealth_cd_values[age_range_key] = float(df.at[i, 'CD'])
+                net_wealth_ak_values[age_range_key] = float(df.at[i, 'AK'])
+                net_wealth_cc_values[age_range_key] = float(df.at[i, 'CC'])
+                net_wealth_al_values[age_range_key] = float(df.at[i, 'AL'])
+                net_wealth_bt_values[age_range_key] = float(df.at[i, 'BT'])
+                net_wealth_aa_values[age_range_key] = float(df.at[i, 'AA'])
                 break
 
+    # Convert the net wealth values dictionaries to lists (optional)
+    net_wealth_cd_list = [net_wealth_cd_values[age_range] for age_range in age_ranges]
+    net_wealth_ak_list = [net_wealth_ak_values[age_range] for age_range in age_ranges]
+    net_wealth_cc_list = [net_wealth_cc_values[age_range] for age_range in age_ranges]
+    net_wealth_al_list = [net_wealth_al_values[age_range] for age_range in age_ranges]
+    net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
+    net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
+    
+    print(age_ranges)
+    print(net_wealth_cd_list)
+    print(net_wealth_ak_list)
+    print(net_wealth_cc_list)
+    print(net_wealth_al_list)
+    print(net_wealth_bt_list)
+    print(net_wealth_aa_list)
+    
+    age_ranges = json.dumps(age_ranges)
+    net_wealth_cd_list = json.dumps(net_wealth_cd_list)
+    net_wealth_ak_list = json.dumps(net_wealth_ak_list)
+    net_wealth_cc_list = json.dumps(net_wealth_cc_list)
+    net_wealth_al_list = json.dumps(net_wealth_al_list)
+    net_wealth_bt_list = json.dumps(net_wealth_bt_list)
+    net_wealth_aa_list = json.dumps(net_wealth_aa_list)
 
+    def find_max_index(df):
+        cumulative_sum = 0
+        max_index = 0
 
-    print(df[['AK', 'AL', 'CC', 'CD']])
-    print(TO_liquid)
-    print(TO_housing)
-    print(SO_mortgage_finish)
-    print(SO_liquid)
-    print(SO_housing)
+        for i in range(len(df)):
+            if float(df.at[i, 'BH']) >= 1:
+                max_index = i + 1
+                break
+
+        return max_index
+
+    max_index = find_max_index(df)
+    age_stairgraph = df['D'].iloc[:max_index].tolist()
+    share_stairgraph = df['BH'].iloc[:max_index].tolist()
+    print(share_stairgraph)
+
+    # Convert to JSON-exportable formats (floats for BH values)
+    age_stairgraph = json.dumps(age_stairgraph)
+    share_stairgraph = json.dumps([float(BH) for BH in share_stairgraph])
 
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
@@ -675,13 +712,20 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_house_data": SO_house_data,
         "house_price": house_price,
         "income": gross,
+        "postcode": postcode,
         "full_data": df.to_dict(orient="records"),
 
         "age_ranges": age_ranges,
+        "net_wealth_cd_by_age_range": net_wealth_cd_list,
+        "net_wealth_ak_by_age_range": net_wealth_ak_list,
+        "net_wealth_cc_by_age_range": net_wealth_cc_list,
+        "net_wealth_al_by_age_range": net_wealth_al_list,
+        "net_wealth_bt_by_age_range": net_wealth_bt_list,
+        "net_wealth_aa_by_age_range": net_wealth_aa_list,
+    
+        "age_stairgraph": age_stairgraph,
+        "share_stairgraph": share_stairgraph,
     }
-
-
     return results
     
-
 results = get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment)

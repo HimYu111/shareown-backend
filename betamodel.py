@@ -604,14 +604,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_liquid = 0      
 
     try:
-        if income >= 90000: 
-            SO_housing = int(1)
-        else:
-            SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
-    except (ValueError, IndexError) as e:
-        SO_housing = 0    
-
-    try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
                           ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) 
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
