@@ -697,6 +697,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         NS_housing = 0   
 
     try:
+        NS_mortgage_finish = int(df.loc[df[df['CU'] == 1].index[0], 'D'])
+    except (ValueError, IndexError) as e:
+        NS_mortgage_finish = 0 
+
+    try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
                           ((mortgage_rate/12) / (1 - (1 + (mortgage_rate/12))**(-12*mortgage_term)))) 
                             + (0.75 * 0.0275 * df.loc[df['AO'] != 0, 'F'].iloc[0]/12) + (service_charge * df.loc[df['AO'] != 0, 'F'].iloc[0]/12))
@@ -828,6 +833,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_share": SO_share,
         "NS_savings": NS_savings,
         "NS_housing": NS_housing,
+        "NS_mortgage_finish": NS_mortgage_finish,
 
         "age_at_time_data": age_at_time_data,
         "staircasing_data": staircasing_data,
