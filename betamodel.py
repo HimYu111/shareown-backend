@@ -99,7 +99,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'N0', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'N1', 'N2', 'W', 'X', 
     'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 
     'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 
-    'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8']
+    'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 
+    'CP', 'CQ', 'CR', 'CS', 'CT', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DA']
 
 
     for col in additional_columns:
@@ -420,14 +421,14 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         if df.at[0, 'AZ'] == 1 and df.at[0, 'BA'] == 1:
             df.at[0, 'BB'] = 1
         else:
-            df.at[0, 'BB'] = 0  # This line seems redundant given your description; adjust as needed
+            df.at[0, 'BB'] = 0  
         for i in range(1, len(df)):
             if df.at[i, 'AZ'] == 1 and df.at[i, 'BA'] == 1:
                 df.at[i, 'BB'] = 1
             else:
                 df.at[i, 'BB'] = df.at[i-1, 'BB'] * (1 + rent_appreciation)
 
-        #Purchase price and adjusted 
+    #Purchase price and adjusted 
     for i in range(len(df)):
         df.at[i, 'BC'] =  df.at[i, 'AZ']*df.at[i, 'F']
         df['BD'] = (df['BC'].cumsum()).astype(int)
@@ -534,6 +535,83 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'CC'] = df.at[i, 'BY']/df.at[i, 'CA'] 
         df.at[i, 'CD'] = df.at[i, 'BZ']/df.at[i, 'CA']
 
+    #Keep initial share
+    df.at[0, 'CP'] =  df.at[0, 'BH'] if df.at[0, 'BH'] > 0 else 0
+    for i in range(1, len(df)):
+        if df.at[i-1, 'BH'] == 0 and df.at[i, 'BH'] > 0:
+            df.at[i, 'CP'] = df.at[i, 'BH']  
+        else:
+            df.at[i, 'CP'] = df.at[i-1, 'CP'] 
+
+    #Loan
+    df.at[0, 'CQ'] =  df.at[0, 'BJ'] 
+    for i in range(1, len(df)):
+        if df.at[i-1, 'BJ'] == 0 and df.at[i, 'BJ'] > 0:
+            df.at[i, 'CQ'] = df.at[i, 'BJ']  
+        else:
+            df.at[i, 'CQ'] = 0
+    
+    #Rent inflation index
+    df.at[0, 'CR'] = 1 if df.at[0, 'CP'] > 0 else 0
+    for i in range(1, len(df)):
+        if df.at[i-1, 'CP'] == 0 and df.at[i, 'CP'] > 0: 
+            df.at[i, 'CR'] = 1  
+        else:
+            df.at[i, 'CR'] = df.at[i-1, 'CR'] * (1 + rent_appreciation)
+    for i in range(len(df)):
+        bc_value = df['BC'][df['BC'] != 0].iloc[0]  # Get the first non-zero value in 'BC'
+        df['CS'] = bc_value
+
+    #Outstanding Balance
+    if df.at[0, 'CQ'] > 0:
+        df.at[0, 'CT'] = df.at[0, 'CQ']  
+    else:
+        df.at[0, 'CT'] = df.at[0, 'CT'] * (1 + mortgage_rate) + df.at[0, 'CQ'] - (
+            df.at[0, 'I'] - df.at[0, 'K'] - (1 - df.at[0, 'CP']) * initial_rent_percent * df.at[0, 'CR'] * df.at[0, 'CS']
+        )
+    for i in range(1, len(df)):
+        if df.at[i-1, 'CQ'] == 0 and df.at[i, 'CQ'] > 0:
+            df.at[i, 'CT'] = df.at[i, 'CQ']  # If CQ(i-1) = 0 and CQ(i) > 0, set CT(i) = CQ(i)
+        else:
+            # Else apply the rest of the formula
+            df.at[i, 'CT'] = df.at[i-1, 'CT'] * (1 + mortgage_rate) + df.at[i, 'CQ'] - (
+                df.at[i, 'I'] - df.at[i, 'K'] - (1 - df.at[i, 'CP']) * initial_rent_percent * df.at[i, 'CR'] * df.at[i, 'CS']
+        )
+    #Mortgage Repayment Indicator + cumsum
+    df.at[0, 'CU'] = 0
+    for i in range(1, len(df)):
+        if df.at[i, 'CT'] <= 0 and df.at[i-1, 'CT'] > 0:
+            df.at[i, 'CU'] = 1  # If true, set CU to 1
+        else:
+            df.at[i, 'CU'] = 0
+
+    df['CV'] = df['CU'].cumsum()
+    df['CV'] = (df['CV'] >= 1).astype(int)
+
+    #First savings 
+    df.at[0, 'CW'] = 0
+    for i in range(1, len(df)):
+        if df.at[i-1, 'CT'] > 0 and df.at[i, 'CT'] < 0:
+            df.at[i, 'CW'] = -df.at[i, 'CT'] * (1 + savings_rate) / (1 + mortgage_rate)
+        else:
+            df.at[i, 'CW'] = 0
+
+    #Total savings
+    df.at[0, 'CX'] = (df.at[0, 'CU'] * df.at[0, 'CW'] + 
+                      (df.at[0, 'I'] - df.at[0, 'K'] - df.at[0, 'CR'] * df.at[0, 'CS'] * initial_rent_percent)) * df.at[0, 'CV']
+    for i in range(1, len(df)):
+        df.at[i, 'CX'] = (df.at[i, 'CU'] * df.at[i, 'CW'] +  
+                    (df.at[i-1, 'CX'] * (1 + savings_rate)) + 
+                    (df.at[i, 'I'] - df.at[i, 'K'] - df.at[i, 'CR'] * df.at[i, 'CS'] * initial_rent_percent)) * df.at[i, 'CV']
+    
+    #Home share value
+    for i in range(len(df)):
+        df.at[i, 'CY'] = df.at[i, 'CP'] * df.at[i, 'F']  
+    #Discounted total savings
+        df.at[i, 'CZ'] = df.at[i, 'CX'] / df.at[i, 'AI']
+    #Discounted home share value
+        df.at[i, 'DA'] = df.at[i, 'CY'] / df.at[i, 'AI'] 
+
 
 #########################
 # Initialize all your output variables with defaults or None
@@ -607,6 +685,16 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_housing = int(df.loc[df['D'] == retirement_age, 'CD'].iloc[0])
     except (ValueError, IndexError) as e:
         SO_housing = 0    
+
+    try:
+        NS_savings = int(df.loc[df['D'] == retirement_age, 'CZ'].iloc[0])
+    except (ValueError, IndexError) as e:
+        NS_savings = 0   
+
+    try:
+        NS_housing = int(df.loc[df['D'] == retirement_age, 'DA'].iloc[0])
+    except (ValueError, IndexError) as e:
+        NS_housing = 0   
 
     try:
         SO_mortgage = int((((0.25 * df.loc[df['AO'] != 0, 'F'].iloc[0]) - (0.0125 * df.loc[df['AO'] != 0, 'F'].iloc[0] ))*
@@ -738,6 +826,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_deposit": SO_deposit,
         "SO_mortgage": SO_mortgage,
         "SO_share": SO_share,
+        "NS_savings": NS_savings,
+        "NS_housing": NS_housing,
 
         "age_at_time_data": age_at_time_data,
         "staircasing_data": staircasing_data,
