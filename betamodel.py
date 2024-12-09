@@ -17,7 +17,7 @@ transaction_cost = 0
 
 ############ TO
 LTV = 0.95
-loan_ratio = 4.5
+loan_ratio = 6
 
 ############ SO1
 max_inc_to_exp = 0.4
