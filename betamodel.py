@@ -559,7 +559,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         else:
             df.at[i, 'CR'] = df.at[i-1, 'CR'] * (1 + rent_appreciation)
     for i in range(len(df)):
-        bc_value = df['BC'][df['BC'] != 0].iloc[0]  # Get the first non-zero value in 'BC'
+        filtered_bc = df['BC'][df['BC'] != 0]
+        if not filtered_bc.empty:
+            bc_value = filtered_bc.iloc[0]  # Get the first non-zero value in 'BC'
+        else:
+            bc_value = 0 
         df['CS'] = bc_value
 
     #Outstanding Balance
