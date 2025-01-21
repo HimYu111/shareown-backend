@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "json": "^11.0.0",
+    "math": "^0.0.3",
+    "os": "^0.1.2",
+    "pandas": "^0.0.3",
     "tw-elements": "^1.1.0"
   }
 }

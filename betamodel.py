@@ -443,7 +443,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
     df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
     df.at[0, 'BH'] = 1 if df.at[0, 'BH'] == 1 else min((df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 0.75 if df.at[0, 'BH'] == 0 else 1)
-    df.at[0, 'BM'] = df.at[0, 'BL'] * df.at[0, 'BF'] if df.at[0, 'BH'] < 1 else min([df.at[0, 'BL'], df.at[0, 'F'] - df.at[0, 'BG']])
+    df.at[0, 'BM'] =  df.at[0, 'BF'] * min(df.at[0, 'BJ'], df.at[0, 'BK'], (0.75 * df.at[0, 'F'] - df.at[0, 'BG']))
+
 
 
     for i in range(1, len(df)):
@@ -464,12 +465,13 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
             min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
         )        
         
-        if df.at[i, 'BH'] < 1:
-            df.at[i, 'BM'] = (df.at[i-1, 'BM'] + df.at[i, 'BL']*df.at[i, 'BF'])  
-        elif df.at[i, 'BH'] == 1 and df.at[i-1, 'BH'] < 1:
-            df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F']-df.at[i, 'BG']))
-        else: 
-            df.at[i, 'BM'] = df.at[i-1, 'BM']
+        for i in range(1, len(df)):
+            if df.at[i, 'BH'] < 1:
+                df.at[i, 'BM'] = df.at[i-1, 'BM'] + df.at[i, 'BL'] * df.at[i, 'BF']
+            elif df.at[i, 'BH'] == 1 and df.at[i-1, 'BH'] < 1:
+                df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F'] - df.at[i, 'BG']))
+            else:
+                df.at[i, 'BM'] = df.at[i-1, 'BM']
 
 
     for i in range(len(df)):
