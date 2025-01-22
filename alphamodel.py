@@ -30,10 +30,10 @@ affordability_cons = 0.4
 
 house_price = 300000
 FTB = 0
-gross = 42500
+gross = 38500
 consumption = 1600
 age = 37
-savings = 15000
+savings = 30000
 rent = 1300
 loan_repayment = 0
 postcode = "Basildon"
@@ -463,11 +463,14 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         
         df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
         
-        df.at[i, 'BH'] = 1 if df.at[i-1, 'BH'] == 1 else (
-            min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 0.75)
-            if df.at[i-1, 'BH'] == 0 else
-            min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
-        )        
+        df.at[i, 'BH'] = max(
+            df.at[i-1, 'BH'],  
+            1 if df.at[i-1, 'BH'] == 1 else (
+                min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 0.75)
+                if df.at[i-1, 'BH'] == 0 else
+                min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
+            )
+        )
         
         for i in range(1, len(df)):
             if df.at[i, 'BH'] < 1:
