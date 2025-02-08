@@ -97,9 +97,9 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     df = pd.DataFrame({'D': range(age, 68)}, index=range(num_rows))
 
     additional_columns = ['E', 'F', 'G', 'H', 'I', 'J', 'N0', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'N1', 'N2', 'W', 'X', 
-    'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 
+    'Y', 'Z', 'AA', 'AAIA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 
     'AW', 'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ', 'BR', 
-    'BS', 'BT', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 
+    'BS', 'BT', 'BTIA', 'BU', 'BV', 'BW', 'BX', 'BY', 'BZ', 'CA', 'CB', 'CC', 'CD',  'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 
     'CP', 'CQ', 'CR', 'CS', 'CT', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DA']
 
 
@@ -621,6 +621,12 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     #Discounted home share value
         df.at[i, 'DA'] = df.at[i, 'CY'] / df.at[i, 'AI'] 
 
+        df.at[i, 'AAIA'] =  df.at[i, 'AA']/df.at[i, 'AI']
+
+    df.at[0, 'BTIA'] = 0
+    for i in range(1, len(df)):
+        df.at[i, 'BTIA'] =  df.at[i, 'BT']/df.at[i, 'AI']
+
 
 #########################
 # Initialize all your output variables with defaults or None
@@ -764,8 +770,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
                 net_wealth_ak_values[age_range_key] = float(df.at[i, 'AK'])
                 net_wealth_cc_values[age_range_key] = float(df.at[i, 'CC'])
                 net_wealth_al_values[age_range_key] = float(df.at[i, 'AL'])
-                net_wealth_bt_values[age_range_key] = float(df.at[i, 'BT'])
-                net_wealth_aa_values[age_range_key] = float(df.at[i, 'AA'])
+                net_wealth_bt_values[age_range_key] = float(df.at[i, 'BTIA'])
+                net_wealth_aa_values[age_range_key] = float(df.at[i, 'AAIA'])
                 break
 
     # Convert the net wealth values dictionaries to lists (optional)
@@ -776,13 +782,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
     net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
-    print(age_ranges)
-    print(net_wealth_cd_list)
-    print(net_wealth_ak_list)
-    print(net_wealth_cc_list)
-    print(net_wealth_al_list)
-    print(net_wealth_bt_list)
-    print(net_wealth_aa_list)
+    print(df[['AAIA', 'BTIA']])
+
+#'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 
+#    
+
     
     age_ranges = json.dumps(age_ranges)
     net_wealth_cd_list = json.dumps(net_wealth_cd_list)
@@ -815,8 +819,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     #Graphs 
     age_at_time_data = df['D'].to_json(orient='records')
     staircasing_data = df['BH'].to_json(orient='records')
-    mortgage_data = df['BT'].to_json(orient='records')
-    mortgage_data2 = df['AA'].to_json(orient='records')
+    mortgage_data = df['BTIA'].to_json(orient='records')
+    mortgage_data2 = df['AAIA'].to_json(orient='records')
     TO_wealth_data = df['AK'].to_json(orient='records')
     SO_wealth_data = df['CC'].to_json(orient='records')
     TO_house_data = df['AL'].to_json(orient='records')
@@ -870,3 +874,5 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     }
 
     return results
+
+results = get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment)
