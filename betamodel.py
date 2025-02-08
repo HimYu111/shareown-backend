@@ -17,7 +17,7 @@ transaction_cost = 0
 
 ############ TO
 LTV = 0.95
-loan_ratio = 6
+loan_ratio = 4.5
 
 ############ SO1
 max_inc_to_exp = 0.4
@@ -28,13 +28,18 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-#house_price = 300000
-#FTB = 0
-#gross = 50000
-#consumption = 1500
-#age = 18
-#savings = 10000
-#rent = 1300
+house_price = 300000
+FTB = 0
+gross = 38500
+consumption = 1600
+age = 37
+savings = 30000
+rent = 1300
+loan_repayment = 0
+postcode = "Basildon"
+propertyType = "Terraced"
+bedrooms = 2
+occupation = "Administrative occupations"
 
 def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +77,6 @@ def get_house_data(postcode, propertyType, sheet_name='Appreciation Rate'):
     except IndexError:
         return "Local authority name not found or no data in the specified column"
 
-#
 def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_price, FTB, gross, consumption, age, savings, rent, loan_repayment):
     #Basic###################################################################
     print(postcode)
@@ -619,8 +623,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     #Discounted total savings
         df.at[i, 'CZ'] = df.at[i, 'CX'] / df.at[i, 'AI']
     #Discounted home share value
-        df.at[i, 'DA'] = df.at[i, 'CY'] / df.at[i, 'AI'] 
-        
+        df.at[i, 'DA'] = df.at[i, 'CY'] / df.at[i, 'AI']         
         df.at[i, 'AAIA'] =  df.at[i, 'AA']/df.at[i, 'AI']
 
     df.at[0, 'BTIA'] = 0
@@ -782,10 +785,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
     net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
-    print(df[['AAIA', 'BTIA']])
-
-#'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 
-#    
+    print(df[['BE', 'BF', 'BG', 'BJ', 'BK', 'BL', 'BH', 'BM']])
 
     
     age_ranges = json.dumps(age_ranges)
