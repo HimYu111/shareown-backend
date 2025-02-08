@@ -633,6 +633,10 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     for i in range(1, len(df)):
         df.at[i, 'BTIA'] =  df.at[i, 'BT']/df.at[i, 'AI']
 
+    last_AAIA = df.at[df.index[-1], 'AAIA']
+    last_BTIA = df.at[df.index[-1], 'BTIA']
+    print(last_AAIA, last_BTIA)
+
 
 #########################
 # Initialize all your output variables with defaults or None
