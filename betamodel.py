@@ -620,7 +620,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'CZ'] = df.at[i, 'CX'] / df.at[i, 'AI']
     #Discounted home share value
         df.at[i, 'DA'] = df.at[i, 'CY'] / df.at[i, 'AI'] 
-
+        
         df.at[i, 'AAIA'] =  df.at[i, 'AA']/df.at[i, 'AI']
 
     df.at[0, 'BTIA'] = 0
