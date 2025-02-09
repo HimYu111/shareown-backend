@@ -630,6 +630,12 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     for i in range(1, len(df)):
         df.at[i, 'BTIA'] =  df.at[i, 'BT']/df.at[i, 'AI']
 
+    last_AAIA = df.at[df.index[-1], 'AAIA']
+    last_BTIA = df.at[df.index[-1], 'BTIA']
+
+    TO_last_mortgage = last_AAIA
+    SO_last_mortgage = last_BTIA
+
 
 #########################
 # Initialize all your output variables with defaults or None
@@ -726,7 +732,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
         
-    print(SO_mortgage)
+    print(last_AAIA, last_BTIA)
 
     try:
         SO_deposit = int((df.loc[df['AO'] != 0, 'F'].iloc[0]) * 0.05 * 0.25)
@@ -785,9 +791,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
     net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
-    print(df[['BE', 'BF', 'BG', 'BJ', 'BK', 'BL', 'BH', 'BM']])
-
-    
     age_ranges = json.dumps(age_ranges)
     net_wealth_cd_list = json.dumps(net_wealth_cd_list)
     net_wealth_ak_list = json.dumps(net_wealth_ak_list)
@@ -834,6 +837,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "TO_housing": TO_housing, 
         "TO_deposit": TO_deposit,
         "TO_mortgage": TO_mortgage,
+        "TO_last_mortgage": TO_last_mortgage,
 
         "SO_start_age": SO_start_age, 
         "SO_time": SO_time,
@@ -843,6 +847,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_housing": SO_housing,
         "SO_deposit": SO_deposit,
         "SO_mortgage": SO_mortgage,
+        "SO_last_mortgage": SO_last_mortgage, 
         "SO_share": SO_share,
         "NS_savings": NS_savings,
         "NS_housing": NS_housing,

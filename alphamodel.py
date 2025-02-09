@@ -635,7 +635,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
     last_AAIA = df.at[df.index[-1], 'AAIA']
     last_BTIA = df.at[df.index[-1], 'BTIA']
-    print(last_AAIA, last_BTIA)
 
 
 #########################
@@ -793,6 +792,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
     print(df[['AAIA', 'BTIA']])
+    print("last_AAIA:", last_AAIA, "Type:", type(last_AAIA))
+    print("last_BTIA:", last_BTIA, "Type:", type(last_BTIA))
 
 #'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 
 #    
