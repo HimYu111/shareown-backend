@@ -633,8 +633,8 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     last_AAIA = df.at[df.index[-1], 'AAIA']
     last_BTIA = df.at[df.index[-1], 'BTIA']
 
-    TO_last_mortgage = last_AAIA
-    SO_last_mortgage = last_BTIA
+    TO_last_mortgage = int(last_AAIA)
+    SO_last_mortgage = int(last_BTIA)
 
 
 #########################
