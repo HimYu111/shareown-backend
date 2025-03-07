@@ -442,50 +442,44 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'BF'] = df.at[i, 'BA'] 
 
 #############################################
-    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'N0'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
-    df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
-    df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
-    df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
-    df.at[0, 'BH'] = 1 if df.at[0, 'BH'] == 1 else min((df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 0.75 if df.at[0, 'BH'] == 0 else 1)
-    df.at[0, 'BM'] =  df.at[0, 'BF'] * min(df.at[0, 'BJ'], df.at[0, 'BK'], (0.75 * df.at[0, 'F'] - df.at[0, 'BG']))
-
-
-
-    for i in range(1, len(df)):
-        if df.at[i, 'AZ'] == 1:
-            df.at[i, 'BG'] = df.at[i, 'M']  
-        else: 
-            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'N0'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BM']* mortgage_rate))
-        
-        df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
-        
-        df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
-        
-        df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
-        
-        df.at[i, 'BH'] = max(
-            df.at[i-1, 'BH'],  
-            1 if df.at[i-1, 'BH'] == 1 else (
-                min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 0.75)
-                if df.at[i-1, 'BH'] == 0 else
-                min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
-            )
-        )
-        
+        df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'N0'] - (df.at[0, 'F'] *service_charge) - (df.at[0, 'BF']*(1-df.at[0, 'BI'])*staircase_admin) - (df.at[0, 'BI']*(1-0)) - (0* mortgage_rate))
+        df.at[0, 'BJ'] = df.at[0, 'BF'] * min(loan_ratio * df.at[0, 'I'], df.at[0, 'F'] - df.at[0, 'BG'])
+        df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
+        df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
+        df.at[0, 'BH'] = 1 if df.at[0, 'BH'] == 1 else min((df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 0.75 if df.at[0, 'BH'] == 0 else 1)
+        df.at[0, 'BM'] =  df.at[0, 'BL']
+    
+    
+    
         for i in range(1, len(df)):
-            if df.at[i, 'BH'] < 1:
-                df.at[i, 'BM'] = df.at[i-1, 'BM'] + df.at[i, 'BL'] * df.at[i, 'BF']
-            elif df.at[i, 'BH'] == 1 and df.at[i-1, 'BH'] < 1:
-                df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F'] - df.at[i, 'BG']))
+            if df.at[i, 'AZ'] == 1:
+                df.at[i, 'BG'] = df.at[i, 'M']  
+            else: 
+                df.at[i, 'BG'] =  df.at[i, 'BF'] * (df.at[i, 'I'] - df.at[i, 'N0'] - (df.at[i, 'F'] *service_charge) - (df.at[i, 'BF']*(1-df.at[i-1, 'BI'])*staircase_admin) - (df.at[i, 'BI']*(1 - df.at[i-1, 'BT'])) - (df.at[i-1, 'BM']* mortgage_rate))
+                
+            df.at[i, 'BJ'] = (df.at[i, 'BF'] * min(loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BY'], (1 - df.at[i-1, 'BT']) * df.at[i, 'F'] - df.at[i, 'BS']) if (1 - df.at[i-1, 'BT']) > 0 else 0)
+    
+            df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
+            
+            df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
+            
+            df.at[i, 'BH'] = max(
+                df.at[i-1, 'BH'],  
+                1 if df.at[i-1, 'BH'] == 1 else (
+                    min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 0.75)
+                    if df.at[i-1, 'BH'] == 0 else
+                    min(df.at[i-1, 'BH'] + (df.at[i, 'BG'] + df.at[i, 'BL']) / df.at[i, 'F'], 1)
+                )
+            )
+            
+            for i in range(1, len(df)):
+                df.at[i, 'BM'] =  df.at[i, 'BL'] + df.at[i-1, 'BM']
+    
+        for i in range(len(df)):
+            if df.at[i, 'BH'] == 1:
+                df.at[i, 'BI'] = 1 
             else:
-                df.at[i, 'BM'] = df.at[i-1, 'BM']
-
-
-    for i in range(len(df)):
-        if df.at[i, 'BH'] == 1:
-            df.at[i, 'BI'] = 1 
-        else:
-            df.at[i, 'BI'] = 0
+                df.at[i, 'BI'] = 0
     
 ######################################
     if df.at[0, 'BI'] > 0:
