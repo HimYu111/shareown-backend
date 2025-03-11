@@ -30,13 +30,13 @@ staircase_admin = 1000
 service_charge = 0.01
 affordability_cons = 0.4
 
-house_price = 280000
+house_price = 180000
 FTB = 0
 gross = 37000
 consumption = 1500
-age = 32
-savings = 166666
-rent = 512
+age = 40
+savings = 16666
+rent = 511
 loan_repayment = 42
 postcode = "Basildon"
 propertyType = "Terraced"
@@ -444,27 +444,46 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         df.at[i, 'BF'] = df.at[i, 'BA'] 
 
 #############################################
-    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'N0'] - df.at[0, 'F'] * service_charge - staircase_admin - (0 * mortgage_rate))
-    df.at[0, 'BJ'] = min([df.at[0, 'BF'] * loan_ratio * df.at[0, 'I'], (1 - 0) * df.at[0, 'F'] - df.at[0, 'BG']])
+    df.at[0, 'BG'] = df.at[0, 'M'] if df.at[0, 'AZ'] == 1 else df.at[0, 'BF'] * (df.at[0, 'I'] - df.at[0, 'N0'] - (df.at[0, 'F'] *service_charge) - (df.at[0, 'BF']*(1-df.at[0, 'BI'])*staircase_admin) - (df.at[0, 'BI']*(1-0)) - (0* mortgage_rate))
+    df.at[0, 'BJ'] = df.at[0, 'BF'] * min(loan_ratio * df.at[0, 'I'], df.at[0, 'F'] - df.at[0, 'BG'])
     df.at[0, 'BK'] = (LTV / (1 - LTV)) * (df.at[0, 'BG'] + 0 - 0)
-    df.at[0, 'BL'] = min([df.at[0, 'BJ'], df.at[0, 'BK']])
+    value = (0.75 * df.at[0, 'F']) - df.at[0, 'BG']
+    df.at[0, 'BL'] = df.at[0, 'BF'] * min(df.at[0, 'BJ'], df.at[0, 'BK'], value)
     df.at[0, 'BH'] = 1 if df.at[0, 'BH'] == 1 else min((df.at[0, 'BG'] + df.at[0, 'BL']) / df.at[0, 'F'], 0.75 if df.at[0, 'BH'] == 0 else 1)
-    df.at[0, 'BM'] =  df.at[0, 'BF'] * min(df.at[0, 'BJ'], df.at[0, 'BK'], (0.75 * df.at[0, 'F'] - df.at[0, 'BG']))
+    df.at[0, 'BM'] =  df.at[0, 'BL']
 
 
 
     for i in range(1, len(df)):
         if df.at[i, 'AZ'] == 1:
-            df.at[i, 'BG'] = df.at[i, 'M']  
-        else: 
-            df.at[i, 'BG'] = df.at[i, 'BF'] * ((df.at[i, 'I'] - df.at[i, 'N0'] - df.at[i, 'F'] * service_charge - staircase_admin - df.at[i, 'BE']*(1 - df.at[i-1, 'BH']) - df.at[i-1, 'BM']* mortgage_rate))
+            df.at[i, 'BG'] = df.at[i, 'M']
+        else:
+            df.at[i, 'BG'] = df.at[i, 'BF'] * (
+                df.at[i, 'I'] - df.at[i, 'N0'] 
+                - (df.at[i, 'F'] * service_charge) 
+                - (staircase_admin * df.at[i, 'BF'] * (1 - df.at[i-1, 'BI']))  
+                - (df.at[i, 'BE'] * (1 - df.at[i-1, 'BH']))  
+                - (df.at[i-1, 'BM'] * mortgage_rate))
         
-        df.at[i, 'BJ'] = min([df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']]) if (1 - df.at[i-1, 'BH']) > 0 else (df.at[i, 'BF'] * loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'])
-        
+
+        if 1 - df.at[i-1, 'BH'] > 0:
+            df.at[i, 'BJ'] = (df.at[i, 'BF'] * min(loan_ratio * df.at[i, 'I'] - df.at[i-1, 'BM'], (1 - df.at[i-1, 'BH']) * df.at[i, 'F'] - df.at[i, 'BG']))
+        else:
+            df.at[i, 'BJ'] = 0
+
         df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
+
+
+
+        if df.at[i-1, 'BH'] == 0:
+            value = (0.75 * df.at[i, 'F']) - df.at[i, 'BG']
+        else:
+            value = df.at[i, 'BJ']
+        df.at[i, 'BL'] = df.at[i, 'BF'] * min(df.at[i, 'BJ'], df.at[i, 'BK'], value)
+
         
-        df.at[i, 'BL'] = df.at[i, 'BF']*(min(df.at[i, 'BJ'], df.at[i, 'BK']))
-        
+
+
         df.at[i, 'BH'] = max(
             df.at[i-1, 'BH'],  
             1 if df.at[i-1, 'BH'] == 1 else (
@@ -481,13 +500,16 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
                 df.at[i, 'BM'] = df.at[i-1, 'BM'] + min(df.at[i, 'BL'], (df.at[i, 'F'] - df.at[i, 'BG']))
             else:
                 df.at[i, 'BM'] = df.at[i-1, 'BM']
-
+        
+        for i in range(1, len(df)):
+            df.at[i, 'BM'] =  df.at[i, 'BL'] + df.at[i-1, 'BM']
 
     for i in range(len(df)):
         if df.at[i, 'BH'] == 1:
             df.at[i, 'BI'] = 1 
         else:
             df.at[i, 'BI'] = 0
+    
     
 ######################################
     if df.at[0, 'BI'] > 0:
@@ -637,6 +659,26 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     last_BTIA = df.at[df.index[-1], 'BTIA']
 
 
+    for i in range(len(df)):
+        df.at[i, 'DE'] = df.at[i, 'I'] - df.at[i, 'K'] - 0.045*df.at[i, 'F']
+    
+    df.at[0, 'DF'] = 0*(1+savings_rate) + df.at[0, 'DE']
+    for i in range(1, len(df)):
+        df.at[i, 'DF'] = df.at[i-1, 'DF']*(1+savings_rate) + df.at[i, 'DE']
+
+    print(df[['N0', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM']])
+
+    try:
+        TO_last_mortgage = int(last_AAIA)
+    except (ValueError, IndexError) as e:
+        TO_last_mortgage = 0 
+
+    try:
+        SO_last_mortgage = int(last_BTIA)
+    except (ValueError, IndexError) as e:
+        SO_last_mortgage = 0 
+
+
 #########################
 # Initialize all your output variables with defaults or None
     # Check and assign values only if the filtered DataFrames are not empty
@@ -732,7 +774,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     except (ValueError, IndexError) as e:
         SO_mortgage = 0      
         
-    print(SO_mortgage)
+    print(last_AAIA, last_BTIA)
 
     try:
         SO_deposit = int((df.loc[df['AO'] != 0, 'F'].iloc[0]) * 0.05 * 0.25)
@@ -744,6 +786,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         SO_share = float(df.loc[df['BH']  != 0, 'BH'].iloc[0])*100
     except (ValueError, IndexError) as e:
         SO_share = 0 
+
+    try:
+        rent_saving = int(df.loc[df['D'] == retirement_age, 'DE'].iloc[0])
+    except (ValueError, IndexError) as e:
+        rent_saving = 0      
 
     SO_liquid = round(SO_liquid / 1000) * 1000
     TO_liquid = round(TO_liquid / 1000) * 1000
@@ -791,14 +838,6 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
     net_wealth_bt_list = [net_wealth_bt_values[age_range] for age_range in age_ranges]
     net_wealth_aa_list = [net_wealth_aa_values[age_range] for age_range in age_ranges]
     
-    print(df[['AAIA', 'BTIA']])
-    print("last_AAIA:", last_AAIA, "Type:", type(last_AAIA))
-    print("last_BTIA:", last_BTIA, "Type:", type(last_BTIA))
-
-#'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 
-#    
-
-    
     age_ranges = json.dumps(age_ranges)
     net_wealth_cd_list = json.dumps(net_wealth_cd_list)
     net_wealth_ak_list = json.dumps(net_wealth_ak_list)
@@ -845,6 +884,7 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "TO_housing": TO_housing, 
         "TO_deposit": TO_deposit,
         "TO_mortgage": TO_mortgage,
+        "TO_last_mortgage": TO_last_mortgage,
 
         "SO_start_age": SO_start_age, 
         "SO_time": SO_time,
@@ -854,10 +894,12 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
         "SO_housing": SO_housing,
         "SO_deposit": SO_deposit,
         "SO_mortgage": SO_mortgage,
+        "SO_last_mortgage": SO_last_mortgage, 
         "SO_share": SO_share,
         "NS_savings": NS_savings,
         "NS_housing": NS_housing,
         "NS_mortgage_finish": NS_mortgage_finish,
+        "rent_saving": rent_saving,
 
         "age_at_time_data": age_at_time_data,
         "staircasing_data": staircasing_data,
