@@ -473,16 +473,11 @@ def get_house_price_data(postcode, propertyType, bedrooms, occupation, house_pri
 
         df.at[i, 'BK'] = (LTV/(1-LTV))*(df.at[i,'BG']+ (df.at[i-1,'BH']*df.at[i,'F']) - df.at[i-1,'BM'])
 
-
-
         if df.at[i-1, 'BH'] == 0:
             value = (0.75 * df.at[i, 'F']) - df.at[i, 'BG']
         else:
             value = df.at[i, 'BJ']
         df.at[i, 'BL'] = df.at[i, 'BF'] * min(df.at[i, 'BJ'], df.at[i, 'BK'], value)
-
-        
-
 
         df.at[i, 'BH'] = max(
             df.at[i-1, 'BH'],  

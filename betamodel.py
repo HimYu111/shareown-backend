@@ -7,9 +7,9 @@ inflation_adjustment = 0.5
 
 ###############
 
-savings_rate = 0.02
+savings_rate = 0.0415
 inflation = 0.03
-mortgage_rate = 0.04
+mortgage_rate = 0.0435
 #house_price_appreciation = 0.05
 house_maintainance_cost = 0.01
 mortgage_term = 30
